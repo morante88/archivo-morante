@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#171c2d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Morante">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg">
+<title>Archivo Morante</title>
+<style>
+:root {
+  --bg:#f2ead8; --surface:#fffdf7; --ink:#201a18; --muted:#71675e;
+  --navy:#171c2d; --gold:#c59a45; --wine:#71324d; --line:#ded0b8;
+  --shadow:0 10px 30px rgba(32,26,24,.09);
+}
+[data-theme="dark"] {
+  --bg:#11131a; --surface:#1c1f29; --ink:#f7f0e4; --muted:#b8ae9d;
+  --navy:#090b11; --gold:#d3aa5c; --wine:#d684a5; --line:#343845;
+  --shadow:0 10px 30px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;padding-bottom:88px}
+button,input,select{font:inherit}
+.hero{background:linear-gradient(145deg,var(--navy),#2a304a);color:white;padding:calc(20px + env(safe-area-inset-top)) 18px 24px;border-bottom:5px solid var(--gold)}
+.hero-row{max-width:1120px;margin:auto;display:flex;align-items:center;gap:14px}
+.logo{width:58px;height:58px;border-radius:16px;background:#171c2d;border:2px solid var(--gold);padding:8px;flex:0 0 auto}
+h1{font:700 clamp(34px,9vw,66px) Georgia,serif;margin:0;line-height:.95}
+.subtitle{margin:8px 0 0;color:#eadfc9}
+main{max-width:1120px;margin:auto;padding:14px}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:-4px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px;box-shadow:var(--shadow)}
+.stat b{font-size:25px;color:var(--wine);display:block} .stat span{font-size:13px;color:var(--muted)}
+.toolbar{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--bg) 92%, transparent);backdrop-filter:blur(14px);padding:10px 0}
+.search{width:100%;padding:15px 16px;border-radius:16px;border:1px solid var(--line);background:var(--surface);color:var(--ink);outline:none}
+.filters{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-top:8px}
+select,.icon-btn{min-height:44px;border:1px solid var(--line);border-radius:13px;background:var(--surface);color:var(--ink);padding:0 11px}
+.icon-btn{width:46px;font-size:19px}
+.status{color:var(--muted);font-size:14px;margin:8px 2px 12px}
+.cards{display:grid;gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-left:7px solid var(--gold);border-radius:18px;padding:16px;box-shadow:var(--shadow)}
+.card-head{display:flex;justify-content:space-between;align-items:start;gap:8px}
+.date{font-size:14px;font-weight:800;color:var(--wine);letter-spacing:.03em}
+.place{font:700 27px Georgia,serif;line-height:1.05;margin:4px 0}
+.meta{font-size:13px;color:var(--muted)}
+.card-actions{display:flex;gap:7px}
+.small-btn{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:11px;padding:8px 10px}
+.act{border-top:1px solid var(--line);margin-top:12px;padding-top:12px;line-height:1.45}
+.badge{display:inline-block;background:color-mix(in srgb,var(--gold) 20%,var(--surface));border-radius:99px;padding:4px 9px;font-size:12px;margin-bottom:5px}
+.raw{font-size:11px;color:var(--muted);margin-top:6px}
+.empty{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:24px;text-align:center}
+.pager{display:flex;justify-content:center;align-items:center;gap:12px;margin:24px 0}
+.pager button{padding:11px 15px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:30;background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(18px);border-top:1px solid var(--line);padding:7px 10px calc(7px + env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(4,1fr)}
+.nav-btn{border:0;background:transparent;color:var(--muted);padding:7px 3px;font-size:11px}
+.nav-btn strong{display:block;font-size:20px;margin-bottom:2px} .nav-btn.active{color:var(--wine)}
+.panel{display:none} .panel.active{display:block}
+.rank{display:grid;gap:9px} .rank-row{background:var(--surface);border:1px solid var(--line);padding:13px;border-radius:14px;display:flex;justify-content:space-between;gap:10px}
+.rank-row b{max-width:78%}
+.note{font-size:12px;color:var(--muted);line-height:1.45;margin:10px 2px}
+@media(min-width:760px){.stats{grid-template-columns:repeat(4,1fr)}.cards{grid-template-columns:1fr 1fr}.filters{grid-template-columns:1fr 1fr auto}}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="hero-row">
+    <img class="logo" src="icon.svg" alt="">
+    <div><h1>Archivo Morante</h1><p class="subtitle">Cronología completa, rápida y preparada para móvil</p></div>
+  </div>
+</header>
+<main>
+<section class="stats">
+  <div class="stat"><b>1,419</b><span>festejos agrupados</span></div>
+  <div class="stat"><b>2,843</b><span>registros fechados</span></div>
+  <div class="stat"><b>267</b><span>plazas y localidades</span></div>
+  <div class="stat"><b>33</b><span>temporadas</span></div>
+</section>
+
+<section id="archivePanel" class="panel active">
+  <div class="toolbar">
+    <input id="q" class="search" type="search" placeholder="Buscar ciudad, fecha, ganadería o resultado">
+    <div class="filters">
+      <select id="year"><option value="">Todos los años</option></select>
+      <select id="type"><option value="">Todos los tipos</option></select>
+      <button id="theme" class="icon-btn" title="Cambiar tema">◐</button>
+    </div>
+  </div>
+  <div id="status" class="status"></div>
+  <div id="cards" class="cards"></div>
+  <div class="pager"><button id="prev">Anterior</button><span id="page"></span><button id="next">Siguiente</button></div>
+</section>
+
+<section id="statsPanel" class="panel">
+  <h2>Estadísticas</h2>
+  <p class="note">Los recuentos de orejas y rabos son detecciones automáticas del texto y deben revisarse antes de publicarlos como dato oficial.</p>
+  <div class="stats">
+    <div class="stat"><b>1196</b><span>orejas detectadas</span></div>
+    <div class="stat"><b>54</b><span>rabos detectados</span></div>
+    <div class="stat"><b>2025</b><span>último año</span></div>
+    <div class="stat"><b>1993</b><span>primer año</span></div>
+  </div>
+  <h2>Plazas con más festejos</h2><div id="placesRank" class="rank"></div>
+  <h2>Ganaderías más registradas</h2><div id="ganRank" class="rank"></div>
+</section>
+
+<section id="favPanel" class="panel">
+  <h2>Favoritos</h2>
+  <div id="favCards" class="cards"></div>
+</section>
+
+<section id="aboutPanel" class="panel">
+  <h2>Acerca del archivo</h2>
+  <div class="card">
+    <p>Esta versión conserva todas las líneas fechadas extraídas del Word y agrupa en una misma ficha los registros que comparten ciudad, fecha y tipo de festejo.</p>
+    <p>Puedes buscar, filtrar, guardar favoritos y compartir una ficha desde el móvil.</p>
+    <p><b>Para instalarla como aplicación:</b> cuando esté publicada en una web HTTPS, abre Safari, pulsa Compartir y elige «Añadir a pantalla de inicio».</p>
+  </div>
+</section>
+</main>
+
+<nav class="bottom-nav">
+  <button class="nav-btn active" data-panel="archivePanel"><strong>⌕</strong>Archivo</button>
+  <button class="nav-btn" data-panel="statsPanel"><strong>▥</strong>Datos</button>
+  <button class="nav-btn" data-panel="favPanel"><strong>★</strong>Favoritos</button>
+  <button class="nav-btn" data-panel="aboutPanel"><strong>ⓘ</strong>Información</button>
+</nav>
+
+<script src="data.js"></script>
+<script>
+const DATA=window.MORANTE_DATA||[];
+const PLACE_RANK=[["Sevilla", 79], ["Madrid", 51], ["El Puerto de Santa María", 38], ["Málaga", 30], ["Jerez de la Frontera", 26], ["Valencia", 26], ["Granada", 25], ["Valladolid", 25], ["Córdoba", 24], ["Salamanca", 21], ["Olivenza (Badajoz)", 21], ["Huelva", 20], ["Santander (Cantabria)", 20], ["Almería", 20], ["Algeciras (Cádiz)", 20], ["Alicante", 19], ["Bilbao (Vizcaya)", 19], ["Sanlúcar de Barrameda (Cádiz)", 18], ["Nimes", 17], ["Cuenca", 17]];
+const GAN_RANK=[["Núñez del Cuvillo", 315], ["Juan Pedro Domecq", 258], ["Zalduendo", 172], ["Garcigrande", 99], ["Jandilla", 85], ["Victoriano del Río Cortés", 69], ["Alcurrucén", 63], ["Domingo Hernández Martín", 61], ["Hnos. García Jiménez", 60], ["El Pilar", 57], ["Daniel Ruiz Yagüe", 52], ["Gavira", 49], ["Santiago Domecq Bohórquez", 41], ["Toros de El Torero", 38], ["Toros de Parladé", 38], ["Luis Algarra Polera", 30], ["Torrestrella", 29], ["Vellosino", 28], ["Puerto de San Lorenzo", 28], ["Montalvo", 27]];
+let filtered=[],page=1; const PAGE_SIZE=24; const $=id=>document.getElementById(id);
+const norm=s=>String(s??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const favorites=()=>new Set(JSON.parse(localStorage.getItem('morante-favs')||'[]'));
+function saveFavs(set){localStorage.setItem('morante-favs',JSON.stringify([...set]));}
+function isFav(id){return favorites().has(id)}
+function toggleFav(id){const f=favorites();f.has(id)?f.delete(id):f.add(id);saveFavs(f);render();renderFavs();}
+async function shareEvent(id){
+ const e=DATA.find(x=>x.id===id); if(!e)return;
+ const text=`${e.lugar} · ${e.fecha_es}\n${e.actuaciones.map(a=>[a.ganaderia,a.resultado].filter(Boolean).join(' — ')).join('\n')}`;
+ if(navigator.share){try{await navigator.share({title:'Archivo Morante',text});}catch(_){}}
+ else{await navigator.clipboard.writeText(text);alert('Ficha copiada');}
+}
+function cardHTML(e){
+ return `<article class="card">
+ <div class="card-head"><div><div class="date">${esc(e.fecha_es)}</div><div class="place">${esc(e.lugar)}</div>
+ <div class="meta">${esc(e.tipo)} · ${e.actuaciones.length} registro${e.actuaciones.length===1?'':'s'}</div></div>
+ <div class="card-actions"><button class="small-btn" onclick="toggleFav('${esc(e.id)}')">${isFav(e.id)?'★':'☆'}</button>
+ <button class="small-btn" onclick="shareEvent('${esc(e.id)}')">↗</button></div></div>
+ ${e.actuaciones.map((a,i)=>`<div class="act"><span class="badge">Actuación ${i+1} de ${e.actuaciones.length}</span><br>
+ ${a.ganaderia?`<b>${esc(a.ganaderia)}</b><br>`:''}${esc(a.resultado)}
+ <div class="raw">${esc(a.texto)} · Ref. ${esc(a.referencia)}</div></div>`).join('')}</article>`;
+}
+function apply(reset=true){
+ if(reset)page=1;
+ const q=norm($('q').value),year=$('year').value,type=$('type').value;
+ filtered=DATA.filter(e=>(!year||String(e.anio)===year)&&(!type||e.tipo===type)&&
+ (!q||norm([e.fecha_es,e.lugar,e.tipo,...e.actuaciones.flatMap(a=>[a.ganaderia,a.resultado,a.texto])].join(' ')).includes(q)));
+ render();
+}
+function render(){
+ const pages=Math.max(1,Math.ceil(filtered.length/PAGE_SIZE)); page=Math.min(page,pages);
+ const start=(page-1)*PAGE_SIZE, subset=filtered.slice(start,start+PAGE_SIZE);
+ $('status').textContent=`${filtered.length.toLocaleString('es-ES')} festejos · mostrando ${filtered.length?start+1:0}–${Math.min(start+PAGE_SIZE,filtered.length)}`;
+ $('cards').innerHTML=subset.length?subset.map(cardHTML).join(''):'<div class="empty">No hay resultados con esos filtros.</div>';
+ $('page').textContent=`${page} / ${pages}`; $('prev').disabled=page<=1;$('next').disabled=page>=pages;
+}
+function renderFavs(){
+ const f=favorites(); const items=DATA.filter(e=>f.has(e.id));
+ $('favCards').innerHTML=items.length?items.map(cardHTML).join(''):'<div class="empty">Todavía no has guardado ningún festejo.</div>';
+}
+function renderRank(id,data){
+ $(id).innerHTML=data.map(([name,count],i)=>`<div class="rank-row"><b>${i+1}. ${esc(name)}</b><span>${count.toLocaleString('es-ES')}</span></div>`).join('');
+}
+function init(){
+ [...new Set(DATA.map(x=>x.anio))].sort((a,b)=>b-a).forEach(y=>$('year').insertAdjacentHTML('beforeend',`<option>${y}</option>`));
+ [...new Set(DATA.map(x=>x.tipo))].sort().forEach(t=>$('type').insertAdjacentHTML('beforeend',`<option>${esc(t)}</option>`));
+ const storedTheme=localStorage.getItem('morante-theme');if(storedTheme)document.documentElement.dataset.theme=storedTheme;
+ renderRank('placesRank',PLACE_RANK);renderRank('ganRank',GAN_RANK);apply();renderFavs();
+ if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('./sw.js');
+}
+let timer;$('q').oninput=()=>{clearTimeout(timer);timer=setTimeout(()=>apply(),120)};$('year').onchange=()=>apply();$('type').onchange=()=>apply();
+$('prev').onclick=()=>{page--;render();scrollTo(0,0)};$('next').onclick=()=>{page++;render();scrollTo(0,0)};
+$('theme').onclick=()=>{const t=document.documentElement.dataset.theme==='dark'?'':'dark';document.documentElement.dataset.theme=t;localStorage.setItem('morante-theme',t);};
+document.querySelectorAll('.nav-btn').forEach(btn=>btn.onclick=()=>{document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+ document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));$(btn.dataset.panel).classList.add('active');if(btn.dataset.panel==='favPanel')renderFavs();scrollTo(0,0);});
+init();
+</script>
+</body></html>

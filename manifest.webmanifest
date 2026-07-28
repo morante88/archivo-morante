@@ -1,0 +1,17 @@
+{
+  "name": "Archivo Morante",
+  "short_name": "Morante",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f2ead8",
+  "theme_color": "#171c2d",
+  "description": "Archivo móvil de festejos de Morante de la Puebla",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

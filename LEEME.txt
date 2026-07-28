@@ -1,0 +1,17 @@
+ARCHIVO MORANTE — APP MÓVIL
+
+ARCHIVOS
+- index.html: aplicación.
+- data.js: todos los festejos.
+- manifest.webmanifest, sw.js e icon.svg: instalación como PWA.
+
+ABRIR EN IPHONE SIN PUBLICAR
+1. Descomprime el ZIP en la app Archivos.
+2. Abre ARCHIVO_MORANTE_MOVIL.html, incluido aparte, para usar la versión de un solo archivo.
+
+PUBLICAR GRATIS
+Sube el contenido de esta carpeta a GitHub Pages, Netlify o Cloudflare Pages.
+Una vez publicada bajo HTTPS, Safari permitirá añadirla a la pantalla de inicio.
+
+IMPORTANTE
+La aplicación usa los 1.419 festejos agrupados y las 2.843 líneas fechadas de la extracción completa.
