@@ -40,6 +40,13 @@ main{max-width:1120px;margin:auto;padding:14px}
 select,.icon-btn{min-height:44px;border:1px solid var(--line);border-radius:13px;background:var(--surface);color:var(--ink);padding:0 11px}
 .icon-btn{width:46px;font-size:19px}
 .status{color:var(--muted);font-size:14px;margin:8px 2px 12px}
+.city-summary{display:none;background:linear-gradient(145deg,var(--navy),#2a304a);color:white;border:1px solid var(--gold);border-radius:18px;padding:16px;margin:10px 0 14px;box-shadow:var(--shadow)}
+.city-summary.show{display:block}
+.city-summary h2{font:700 31px Georgia,serif;margin:0 0 12px}
+.city-summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.city-summary-box{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.16);border-radius:14px;padding:12px}
+.city-summary-box b{display:block;font-size:27px;color:#f4d592}
+.city-summary-box span{font-size:13px;color:#eee3cf}
 .cards{display:grid;gap:12px}
 .card{background:var(--surface);border:1px solid var(--line);border-left:7px solid var(--gold);border-radius:18px;padding:16px;box-shadow:var(--shadow)}
 .card-head{display:flex;justify-content:space-between;align-items:start;gap:8px}
@@ -88,7 +95,14 @@ select,.icon-btn{min-height:44px;border:1px solid var(--line);border-radius:13px
       <button id="theme" class="icon-btn" title="Cambiar tema">◐</button>
     </div>
   </div>
-  <div id="status" class="status"></div>
+  <section id="citySummary" class="city-summary">
+  <h2 id="citySummaryName"></h2>
+  <div class="city-summary-grid">
+    <div class="city-summary-box"><b id="citySummaryFestejos">0</b><span>corridas y festejos</span></div>
+    <div class="city-summary-box"><b id="citySummaryOrejas">0</b><span>orejas</span></div>
+  </div>
+</section>
+<div id="status" class="status"></div>
   <div id="cards" class="cards"></div>
   <div class="pager"><button id="prev">Anterior</button><span id="page"></span><button id="next">Siguiente</button></div>
 </section>
@@ -128,7 +142,7 @@ select,.icon-btn{min-height:44px;border:1px solid var(--line);border-radius:13px
   <button class="nav-btn" data-panel="aboutPanel"><strong>ⓘ</strong>Información</button>
 </nav>
 
-<script src="data.js"></script>
+<script src="data.js?v=20260803-citysummary"></script>
 <script>
 const DATA=window.MORANTE_DATA||[];
 const PLACE_RANK=[["Sevilla", 79], ["Madrid", 51], ["El Puerto de Santa María", 38], ["Málaga", 30], ["Jerez de la Frontera", 26], ["Valencia", 26], ["Granada", 25], ["Valladolid", 25], ["Córdoba", 24], ["Salamanca", 21], ["Olivenza (Badajoz)", 21], ["Huelva", 20], ["Santander (Cantabria)", 20], ["Almería", 20], ["Algeciras (Cádiz)", 20], ["Alicante", 19], ["Bilbao (Vizcaya)", 19], ["Sanlúcar de Barrameda (Cádiz)", 18], ["Nimes", 17], ["Cuenca", 17]];
@@ -156,6 +170,48 @@ function cardHTML(e){
  ${a.ganaderia?`<b>${esc(a.ganaderia)}</b><br>`:''}${esc(a.resultado)}
  <div class="raw">${esc(a.texto)} · Ref. ${esc(a.referencia)}</div></div>`).join('')}</article>`;
 }
+
+function countOrejas(text){
+ const t=norm(text);
+ let total=0;
+
+ // Primero, cantidades escritas.
+ const written=[
+   ['diez orejas',10],['ocho orejas',8],['seis orejas',6],
+   ['cinco orejas',5],['cuatro orejas',4],['tres orejas',3],
+   ['dos orejas',2]
+ ];
+ for(const [word,n] of written){
+   if(t.includes(word)) return n;
+ }
+
+ // Después, cantidades numéricas.
+ const numeric=t.match(/(\d+)\s*oreja/);
+ if(numeric) return Number(numeric[1]);
+
+ // "Oreja" en singular.
+ if(/\boreja\b/.test(t)) return 1;
+ return total;
+}
+
+function updateCitySummary(q, exactPlaceExists){
+ const box=$('citySummary');
+ if(!q || !exactPlaceExists){
+   box.classList.remove('show');
+   return;
+ }
+
+ const cityEvents=DATA.filter(e=>norm(e.lugar)===q);
+ const totalOrejas=cityEvents.reduce((sum,e)=>
+   sum+e.actuaciones.reduce((s,a)=>s+countOrejas(a.resultado),0),0
+ );
+
+ $('citySummaryName').textContent=cityEvents[0]?.lugar||'';
+ $('citySummaryFestejos').textContent=cityEvents.length.toLocaleString('es-ES');
+ $('citySummaryOrejas').textContent=totalOrejas.toLocaleString('es-ES');
+ box.classList.add('show');
+}
+
 function apply(reset=true){
  if(reset)page=1;
  const rawQ=$('q').value.trim(),q=norm(rawQ),year=$('year').value,type=$('type').value;
@@ -164,6 +220,7 @@ function apply(reset=true){
  // la búsqueda se limita a esa localidad. Así "Huelva" no muestra
  // "Aracena (Huelva)" ni otros municipios de la provincia.
  const exactPlaceExists=q && DATA.some(e=>norm(e.lugar)===q);
+ updateCitySummary(q, exactPlaceExists);
 
  filtered=DATA.filter(e=>{
    const basicFilters=(!year||String(e.anio)===year)&&(!type||e.tipo===type);
