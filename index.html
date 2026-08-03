@@ -158,9 +158,24 @@ function cardHTML(e){
 }
 function apply(reset=true){
  if(reset)page=1;
- const q=norm($('q').value),year=$('year').value,type=$('type').value;
- filtered=DATA.filter(e=>(!year||String(e.anio)===year)&&(!type||e.tipo===type)&&
- (!q||norm([e.fecha_es,e.lugar,e.tipo,...e.actuaciones.flatMap(a=>[a.ganaderia,a.resultado,a.texto])].join(' ')).includes(q)));
+ const rawQ=$('q').value.trim(),q=norm(rawQ),year=$('year').value,type=$('type').value;
+
+ // Si el texto coincide exactamente con una localidad existente,
+ // la búsqueda se limita a esa localidad. Así "Huelva" no muestra
+ // "Aracena (Huelva)" ni otros municipios de la provincia.
+ const exactPlaceExists=q && DATA.some(e=>norm(e.lugar)===q);
+
+ filtered=DATA.filter(e=>{
+   const basicFilters=(!year||String(e.anio)===year)&&(!type||e.tipo===type);
+   if(!basicFilters) return false;
+   if(!q) return true;
+   if(exactPlaceExists) return norm(e.lugar)===q;
+
+   return norm([
+     e.fecha_es,e.lugar,e.tipo,
+     ...e.actuaciones.flatMap(a=>[a.ganaderia,a.resultado,a.texto])
+   ].join(' ')).includes(q);
+ });
  render();
 }
 function render(){
