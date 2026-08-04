@@ -50,6 +50,21 @@ select,.icon-btn{min-height:44px;border:1px solid var(--line);border-radius:13px
 .city-summary-box{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.16);border-radius:14px;padding:12px}
 .city-summary-box b{display:block;font-size:27px;color:#f4d592}
 .city-summary-box span{font-size:13px;color:#eee3cf}
+.city-summary{display:none;background:linear-gradient(145deg,var(--navy),#2a304a);color:white;border:1px solid var(--gold);border-radius:20px;padding:16px;margin:12px 0 15px;box-shadow:var(--shadow)}
+.city-summary.show{display:block}
+.city-summary-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:12px}
+.city-summary h2{font:700 31px Georgia,serif;margin:0}
+.city-summary-kicker{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#efd28f;font-weight:800}
+.city-summary-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.city-stat{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:11px}
+.city-stat b{display:block;font-size:23px;color:#f3d48c;line-height:1.05;margin-bottom:4px}
+.city-stat span{font-size:12px;color:#eee3cf}
+.city-summary-extra{margin-top:10px;display:grid;gap:7px}
+.city-summary-line{display:flex;justify-content:space-between;gap:14px;border-top:1px solid rgba(255,255,255,.12);padding-top:8px;font-size:13px}
+.city-summary-line span:first-child{color:#ddd1bc}
+.city-summary-line strong{text-align:right;color:#fff}
+@media(min-width:700px){.city-summary-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+
 .ai-box{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:14px;margin:12px 0 14px;box-shadow:var(--shadow)}
 .ai-title{font-weight:800;font-size:17px;margin-bottom:8px}.ai-sub{color:var(--muted);font-size:13px;margin-bottom:10px}
 .ai-row{display:flex;gap:8px}.ai-row input{flex:1;min-width:0}.ai-row button{white-space:nowrap}
@@ -136,13 +151,28 @@ select,.icon-btn{min-height:44px;border:1px solid var(--line);border-radius:13px
   <div id="aiAnswer" class="ai-answer" aria-live="polite"></div><span id="buildVersion" hidden>v7-fixed</span>
 </section>
 
+
 <section id="citySummary" class="city-summary">
-  <h2 id="citySummaryName"></h2>
+  <div class="city-summary-head">
+    <div>
+      <div class="city-summary-kicker">Ficha estadística</div>
+      <h2 id="citySummaryName"></h2>
+    </div>
+  </div>
   <div class="city-summary-grid">
-    <div class="city-summary-box"><b id="citySummaryFestejos">0</b><span>corridas y festejos</span></div>
-    <div class="city-summary-box"><b id="citySummaryOrejas">0</b><span>orejas</span></div>
+    <div class="city-stat"><b id="citySummaryFestejos">0</b><span>festejos</span></div>
+    <div class="city-stat"><b id="citySummaryOrejas">0</b><span>orejas</span></div>
+    <div class="city-stat"><b id="citySummaryEficiencia">0,00</b><span>orejas / festejo</span></div>
+    <div class="city-stat"><b id="citySummaryTemporadas">0</b><span>temporadas</span></div>
+  </div>
+  <div class="city-summary-extra">
+    <div class="city-summary-line"><span>Primera actuación</span><strong id="citySummaryPrimera">—</strong></div>
+    <div class="city-summary-line"><span>Última actuación</span><strong id="citySummaryUltima">—</strong></div>
+    <div class="city-summary-line"><span>Ganadería más lidiada</span><strong id="citySummaryGanaderia">—</strong></div>
+    <div class="city-summary-line"><span>Mejor resultado</span><strong id="citySummaryMejor">—</strong></div>
   </div>
 </section>
+
 <div id="status" class="status"></div>
   <div id="cards" class="cards"></div>
   <div class="pager"><button id="prev">Anterior</button><span id="page"></span><button id="next">Siguiente</button></div>
@@ -273,6 +303,22 @@ function countOrejas(text){
  return total;
 }
 
+
+function normalizeGanaderiaName(g){
+ return String(g||'').replace(/^\s*\d+\s+/,'').trim();
+}
+function resultScore(text){
+ const t=norm(text||'');
+ if(t.includes('rabo')) return 100;
+ if(t.includes('dos orejas')) return 80;
+ if(/\boreja\b/.test(t)) return 50;
+ if(t.includes('vuelta')) return 35;
+ if(t.includes('ovacion')) return 25;
+ if(t.includes('saludos')) return 20;
+ if(t.includes('silencio')) return 10;
+ if(t.includes('pitos')||t.includes('bronca')) return 5;
+ return 0;
+}
 function updateCitySummary(q, exactPlaceExists){
  const box=$('citySummary');
  if(!q || !exactPlaceExists){
@@ -281,15 +327,48 @@ function updateCitySummary(q, exactPlaceExists){
  }
 
  const cityEvents=DATA.filter(e=>norm(e.lugar)===q);
+ if(!cityEvents.length){
+   box.classList.remove('show');
+   return;
+ }
+
  const totalOrejas=cityEvents.reduce((sum,e)=>
    sum+e.actuaciones.reduce((s,a)=>s+countOrejas(a.resultado),0),0
  );
+ const eficiencia=cityEvents.length ? totalOrejas/cityEvents.length : 0;
+ const temporadas=new Set(cityEvents.map(e=>e.anio)).size;
 
- $('citySummaryName').textContent=cityEvents[0]?.lugar||'';
+ const ordered=[...cityEvents].sort((a,b)=>String(a.fecha).localeCompare(String(b.fecha)));
+ const primera=ordered[0];
+ const ultima=ordered[ordered.length-1];
+
+ const gCounts=new Map();
+ cityEvents.forEach(e=>(e.actuaciones||[]).forEach(a=>{
+   const g=normalizeGanaderiaName(a.ganaderia);
+   if(g) gCounts.set(g,(gCounts.get(g)||0)+1);
+ }));
+ const topGan=[...gCounts.entries()].sort((a,b)=>b[1]-a[1] || a[0].localeCompare(b[0],'es'))[0];
+
+ let best=null;
+ cityEvents.forEach(e=>(e.actuaciones||[]).forEach(a=>{
+   const score=resultScore(a.resultado);
+   if(!best || score>best.score){
+     best={score,resultado:a.resultado,fecha:e.fecha_es,ganaderia:normalizeGanaderiaName(a.ganaderia)};
+   }
+ }));
+
+ $('citySummaryName').textContent=cityEvents[0].lugar;
  $('citySummaryFestejos').textContent=cityEvents.length.toLocaleString('es-ES');
  $('citySummaryOrejas').textContent=totalOrejas.toLocaleString('es-ES');
+ $('citySummaryEficiencia').textContent=eficiencia.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2});
+ $('citySummaryTemporadas').textContent=temporadas.toLocaleString('es-ES');
+ $('citySummaryPrimera').textContent=primera ? primera.fecha_es : '—';
+ $('citySummaryUltima').textContent=ultima ? ultima.fecha_es : '—';
+ $('citySummaryGanaderia').textContent=topGan ? `${topGan[0]} · ${topGan[1]}` : '—';
+ $('citySummaryMejor').textContent=best ? `${best.resultado} · ${best.fecha}` : '—';
  box.classList.add('show');
 }
+
 
 function apply(reset=true){
  if(reset)page=1;
