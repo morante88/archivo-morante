@@ -47,6 +47,15 @@ select,.icon-btn{min-height:44px;border:1px solid var(--line);border-radius:13px
 .city-summary-box{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.16);border-radius:14px;padding:12px}
 .city-summary-box b{display:block;font-size:27px;color:#f4d592}
 .city-summary-box span{font-size:13px;color:#eee3cf}
+.ai-box{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:14px;margin:12px 0 14px;box-shadow:var(--shadow)}
+.ai-title{font-weight:800;font-size:17px;margin-bottom:8px}.ai-sub{color:var(--muted);font-size:13px;margin-bottom:10px}
+.ai-row{display:flex;gap:8px}.ai-row input{flex:1;min-width:0}.ai-row button{white-space:nowrap}
+.ai-answer{display:none;margin-top:12px;padding:13px;border-radius:14px;background:rgba(178,135,54,.10);border:1px solid rgba(178,135,54,.35);line-height:1.45}
+.ai-answer.show{display:block}.ai-answer .big{font:700 29px Georgia,serif;color:var(--gold);display:block;margin:2px 0}
+.ai-answer .small{font-size:13px;color:var(--muted)}
+.ai-examples{display:flex;gap:6px;overflow:auto;padding-top:9px}.ai-chip{font-size:12px;border:1px solid var(--border);border-radius:999px;padding:6px 9px;background:var(--bg);white-space:nowrap;cursor:pointer}
+@media(max-width:560px){.ai-row{flex-direction:column}.ai-row button{width:100%}}
+
 .cards{display:grid;gap:12px}
 .card{background:var(--surface);border:1px solid var(--line);border-left:7px solid var(--gold);border-radius:18px;padding:16px;box-shadow:var(--shadow)}
 .card-head{display:flex;justify-content:space-between;align-items:start;gap:8px}
@@ -95,7 +104,23 @@ select,.icon-btn{min-height:44px;border:1px solid var(--line);border-radius:13px
       <button id="theme" class="icon-btn" title="Cambiar tema">◐</button>
     </div>
   </div>
-  <section id="citySummary" class="city-summary">
+  
+<section class="ai-box">
+  <div class="ai-title">🤖 Pregunta al Archivo Morante</div>
+  <div class="ai-sub">Escribe una pregunta normal. La respuesta se calcula con los datos del archivo.</div>
+  <div class="ai-row">
+    <input id="aiQuestion" type="search" placeholder="Ej.: ¿Cuántas tardes toreó Morante en Sevilla?">
+    <button id="aiAsk" type="button">Preguntar</button>
+  </div>
+  <div class="ai-examples">
+    <button class="ai-chip" data-q="¿Cuántas tardes toreó Morante en Sevilla?">Tardes en Sevilla</button>
+    <button class="ai-chip" data-q="¿Cuántas orejas cortó en El Puerto de Santa María?">Orejas en El Puerto</button>
+    <button class="ai-chip" data-q="¿Qué ganadería ha toreado más en Sevilla?">Ganadería más lidiada</button>
+    <button class="ai-chip" data-q="¿Cuántas tardes toreó en 2026?">Tardes en 2026</button>
+  </div>
+  <div id="aiAnswer" class="ai-answer"></div>
+</section>
+<section id="citySummary" class="city-summary">
   <h2 id="citySummaryName"></h2>
   <div class="city-summary-grid">
     <div class="city-summary-box"><b id="citySummaryFestejos">0</b><span>corridas y festejos</span></div>
@@ -142,7 +167,7 @@ select,.icon-btn{min-height:44px;border:1px solid var(--line);border-radius:13px
   <button class="nav-btn" data-panel="aboutPanel"><strong>ⓘ</strong>Información</button>
 </nav>
 
-<script src="data.js?v=20260803-citysummary"></script>
+<script src="data.js?v=ia1"></script>
 <script>
 const DATA=window.MORANTE_DATA||[];
 const PLACE_RANK=[["Sevilla", 79], ["Madrid", 51], ["El Puerto de Santa María", 38], ["Málaga", 30], ["Jerez de la Frontera", 26], ["Valencia", 26], ["Granada", 25], ["Valladolid", 25], ["Córdoba", 24], ["Salamanca", 21], ["Olivenza (Badajoz)", 21], ["Huelva", 20], ["Santander (Cantabria)", 20], ["Almería", 20], ["Algeciras (Cádiz)", 20], ["Alicante", 19], ["Bilbao (Vizcaya)", 19], ["Sanlúcar de Barrameda (Cádiz)", 18], ["Nimes", 17], ["Cuenca", 17]];
@@ -169,6 +194,44 @@ function cardHTML(e){
  ${e.actuaciones.map((a,i)=>`<div class="act"><span class="badge">Actuación ${i+1} de ${e.actuaciones.length}</span><br>
  ${a.ganaderia?`<b>${esc(a.ganaderia)}</b><br>`:''}${esc(a.resultado)}
  <div class="raw">${esc(a.texto)} · Ref. ${esc(a.referencia)}</div></div>`).join('')}</article>`;
+}
+
+
+function aiEsc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function aiPlace(q){
+ const nq=norm(q),places=[...new Set(DATA.map(e=>e.lugar).filter(Boolean))].sort((a,b)=>b.length-a.length);
+ for(const p of places) if(nq.includes(norm(p))) return p;
+ for(const p of places){const base=norm(p.replace(/\s*\([^)]*\)\s*/g,'')); if(base&&nq.includes(base)&&!p.includes('('))return p}
+ return null;
+}
+function aiYear(q){const m=String(q).match(/\b(?:19|20)\d{2}\b/);return m?Number(m[0]):null}
+function aiRows(q){
+ const place=aiPlace(q),year=aiYear(q);let rows=DATA.slice();
+ if(place)rows=rows.filter(e=>norm(e.lugar)===norm(place));
+ if(year)rows=rows.filter(e=>Number(e.anio)===year);
+ return {rows,place,year};
+}
+function aiEars(rows){return rows.reduce((x,e)=>x+e.actuaciones.reduce((s,a)=>s+countOrejas(a.resultado||''),0),0)}
+function aiTopGan(rows){
+ const m=new Map(); rows.forEach(e=>e.actuaciones.forEach(a=>{const g=String(a.ganaderia||'').replace(/^\s*\d+\s+/,'').trim();if(g)m.set(g,(m.get(g)||0)+1)}));
+ return [...m.entries()].sort((a,b)=>b[1]-a[1])[0]||null;
+}
+function aiAsk(){
+ const question=$('aiQuestion').value.trim(),q=norm(question),{rows,place,year}=aiRows(question),scope=[place,year].filter(Boolean).join(' · ')||'Todo el archivo';
+ let ans='';
+ if(!q) ans='Escribe una pregunta.';
+ else if(/cuantas?.*(tardes|festejos|corridas)|numero.*(tardes|festejos|corridas)/.test(q))
+   ans=`<strong>${aiEsc(scope)}</strong><span class="big">${rows.length.toLocaleString('es-ES')}</span>festejos encontrados.`;
+ else if(q.includes('oreja'))
+   ans=`<strong>${aiEsc(scope)}</strong><span class="big">${aiEars(rows).toLocaleString('es-ES')}</span>orejas registradas.<div class="small">${rows.length.toLocaleString('es-ES')} festejos en este ámbito.</div>`;
+ else if(q.includes('ganaderia') && (q.includes('mas')||q.includes('más'))){
+   const top=aiTopGan(rows); ans=top?`<strong>${aiEsc(scope)}</strong><span class="big">${aiEsc(top[0])}</span>${top[1]} actuaciones registradas.`:`No encuentro ganaderías para ${aiEsc(scope)}.`;
+ } else if(/cuantos?.*(toros|reses|actuaciones)/.test(q)){
+   const n=rows.reduce((s,e)=>s+e.actuaciones.length,0); ans=`<strong>${aiEsc(scope)}</strong><span class="big">${n.toLocaleString('es-ES')}</span>actuaciones/reses registradas.`;
+ } else if(place||year){
+   const top=aiTopGan(rows); ans=`<strong>${aiEsc(scope)}</strong><span class="big">${rows.length.toLocaleString('es-ES')} festejos</span>${aiEars(rows).toLocaleString('es-ES')} orejas${top?` · Ganadería más registrada: ${aiEsc(top[0])} (${top[1]})`:''}.`;
+ } else ans='Prueba con: “¿Cuántas tardes toreó en Sevilla?”, “¿Cuántas orejas cortó en 2026?” o “¿Qué ganadería ha toreado más en El Puerto de Santa María?”.';
+ const box=$('aiAnswer'); box.innerHTML=ans; box.classList.add('show');
 }
 
 function countOrejas(text){
@@ -256,7 +319,12 @@ function init(){
  renderRank('placesRank',PLACE_RANK);renderRank('ganRank',GAN_RANK);apply();renderFavs();
  if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('./sw.js');
 }
-let timer;$('q').oninput=()=>{clearTimeout(timer);timer=setTimeout(()=>apply(),120)};$('year').onchange=()=>apply();$('type').onchange=()=>apply();
+let timer;$('q').oninput=()=>{clearTimeout(timer);timer=setTimeout(()=>apply(),120)};$('year').onchange=()=>apply();$('type').onchange=()=>
+$('aiAsk').addEventListener('click',aiAsk);
+$('aiQuestion').addEventListener('keydown',e=>{if(e.key==='Enter')aiAsk()});
+document.querySelectorAll('.ai-chip').forEach(b=>b.addEventListener('click',()=>{$('aiQuestion').value=b.dataset.q||'';aiAsk()}));
+
+apply();
 $('prev').onclick=()=>{page--;render();scrollTo(0,0)};$('next').onclick=()=>{page++;render();scrollTo(0,0)};
 $('theme').onclick=()=>{const t=document.documentElement.dataset.theme==='dark'?'':'dark';document.documentElement.dataset.theme=t;localStorage.setItem('morante-theme',t);};
 document.querySelectorAll('.nav-btn').forEach(btn=>btn.onclick=()=>{document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
