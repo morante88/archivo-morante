@@ -105,15 +105,132 @@ select,.icon-btn{min-height:44px;border:1px solid var(--line);border-radius:13px
 .rank-row b{max-width:78%}
 .note{font-size:12px;color:var(--muted);line-height:1.45;margin:10px 2px}
 @media(min-width:760px){.stats{grid-template-columns:repeat(4,1fr)}.cards{grid-template-columns:1fr 1fr}.filters{grid-template-columns:1fr 1fr auto}}
+
+/* ===== DISEÑO ARCHIVO MORANTE · NEGRO / DORADO / ROJO ===== */
+:root{
+ --bg:#080806;--surface:rgba(18,17,14,.92);--ink:#f5efe3;--muted:#b8ad99;
+ --navy:#080806;--gold:#c99a3f;--wine:#a30d18;--line:rgba(201,154,63,.34);
+ --shadow:0 16px 40px rgba(0,0,0,.38);--card:rgba(18,17,14,.92);--border:rgba(201,154,63,.34)
+}
+[data-theme="dark"]{
+ --bg:#080806;--surface:rgba(18,17,14,.92);--ink:#f5efe3;--muted:#b8ad99;
+ --navy:#080806;--gold:#d0a54f;--wine:#b3111d;--line:rgba(208,165,79,.36);
+ --shadow:0 16px 40px rgba(0,0,0,.42);--card:rgba(18,17,14,.92);--border:rgba(208,165,79,.36)
+}
+body{
+ padding-bottom:30px;
+ background:
+   linear-gradient(rgba(5,5,4,.68),rgba(5,5,4,.82)),
+   url('fondo-morante.jpg') center 18%/cover fixed no-repeat;
+ color:var(--ink);
+}
+.hero{
+ min-height:330px;
+ display:flex;align-items:flex-end;
+ background:
+   linear-gradient(90deg,rgba(0,0,0,.88) 0%,rgba(0,0,0,.46) 52%,rgba(0,0,0,.2) 100%),
+   url('fondo-morante.jpg') center 23%/cover no-repeat;
+ padding:90px 24px 38px;
+ border-bottom:1px solid rgba(201,154,63,.45);
+}
+.hero-row{width:100%;max-width:1180px;align-items:flex-end}
+.logo{width:72px;height:72px;border-radius:50%;background:rgba(0,0,0,.75);border:2px solid var(--gold)}
+h1{font-size:clamp(44px,8vw,82px);text-transform:uppercase;letter-spacing:.02em;text-shadow:0 4px 24px #000}
+.subtitle{font-family:Georgia,serif;font-style:italic;font-size:17px;color:#e0c78f}
+.bottom-nav{
+ position:sticky;top:0;bottom:auto;left:auto;right:auto;z-index:50;
+ max-width:none;
+ background:rgba(7,7,6,.94);
+ border-top:0;border-bottom:1px solid rgba(201,154,63,.42);
+ backdrop-filter:blur(16px);
+ padding:0 max(14px,calc((100vw - 1120px)/2));
+ display:flex;justify-content:flex-start;gap:2px;
+}
+.nav-btn{
+ min-width:130px;color:#c9bea9;padding:15px 18px;font-size:13px;
+ border-bottom:3px solid transparent;text-transform:uppercase;letter-spacing:.06em;font-weight:700
+}
+.nav-btn strong{display:inline;font-size:16px;margin:0 7px 0 0}
+.nav-btn.active{color:#f0d79d;border-bottom-color:var(--gold);background:rgba(201,154,63,.08)}
+main{max-width:1120px;padding:22px 14px 45px}
+.stats{margin:0 0 18px}
+.stat,.card,.rank-row,.empty,.ai-box{
+ background:rgba(15,14,12,.91);
+ border:1px solid rgba(201,154,63,.32);
+ box-shadow:0 16px 38px rgba(0,0,0,.30);
+}
+.stat{border-radius:8px}
+.stat b{color:var(--gold);font-family:Georgia,serif}
+.toolbar{
+ top:49px;
+ background:rgba(8,8,7,.90);
+ border:1px solid rgba(201,154,63,.24);
+ border-radius:10px;
+ padding:12px;
+ margin-bottom:14px;
+}
+.search,select,.icon-btn,.ai-form input{
+ background:rgba(6,6,5,.86)!important;color:#f7f0e4!important;
+ border:1px solid rgba(201,154,63,.45)!important;border-radius:7px!important
+}
+.search::placeholder,.ai-form input::placeholder{color:#9e9484}
+.icon-btn{color:var(--gold)!important}
+.ai-box{border-radius:10px;padding:18px}
+.ai-title{font-family:Georgia,serif;color:#f2d697;font-size:21px}
+.ai-form button{
+ background:#9e1019;color:white;border:1px solid #c63840;border-radius:7px;
+ padding:0 18px;font-weight:800
+}
+.ai-chip{background:rgba(201,154,63,.09)!important;color:#e6d6b5;border-color:rgba(201,154,63,.35)!important}
+.ai-answer{background:rgba(201,154,63,.10);border-color:rgba(201,154,63,.38)}
+.city-summary{
+ background:linear-gradient(145deg,rgba(18,17,14,.96),rgba(5,5,4,.96));
+ border:1px solid var(--gold);border-radius:10px
+}
+.city-summary h2{color:#f3d48c;text-transform:uppercase}
+.city-stat{border-radius:7px;background:rgba(201,154,63,.08);border-color:rgba(201,154,63,.25)}
+.card{border-radius:8px;border-left:4px solid #9e1019}
+.date{color:#d1a34b}.place{color:#fff}.badge{background:rgba(201,154,63,.13);color:#e6ca8d}
+.small-btn,.pager button{background:#11100e;color:#e9dfcd;border-color:rgba(201,154,63,.35);border-radius:6px}
+.panel>h2{font:700 30px Georgia,serif;color:#e2bd6b;border-bottom:1px solid rgba(201,154,63,.3);padding-bottom:8px}
+.status,.meta,.raw,.note{color:#a99e8b}
+@media(min-width:900px){
+ #archivePanel{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:18px;align-items:start}
+ #archivePanel .toolbar{grid-column:1/-1}
+ #archivePanel .ai-box{grid-column:2;grid-row:2 / span 3;position:sticky;top:118px;margin:0}
+ #archivePanel .city-summary{grid-column:1}
+ #archivePanel #status,#archivePanel #cards,#archivePanel .pager{grid-column:1}
+ .cards{grid-template-columns:1fr}
+}
+@media(max-width:700px){
+ body{background-attachment:scroll}
+ .hero{min-height:250px;padding:75px 16px 28px;background-position:center 20%}
+ .hero-row{align-items:flex-end}.logo{width:54px;height:54px}
+ h1{font-size:39px}
+ .subtitle{font-size:13px}
+ .bottom-nav{overflow-x:auto;padding:0 6px;justify-content:flex-start}
+ .nav-btn{min-width:max-content;padding:13px 14px;font-size:11px}
+ .toolbar{top:43px}
+ main{padding-top:14px}
+ .stats{grid-template-columns:repeat(2,1fr)}
+ .card{background:rgba(13,12,10,.94)}
+}
+
 </style>
 </head>
 <body>
 <header class="hero">
   <div class="hero-row">
     <img class="logo" src="icon.svg" alt="">
-    <div><h1>Archivo Morante</h1><p class="subtitle">Cronología completa, rápida y preparada para móvil</p></div>
+    <div><h1>Archivo Morante</h1><p class="subtitle">El legado de un torero único · Archivo histórico y estadístico</p></div>
   </div>
 </header>
+<nav class="bottom-nav">
+  <button class="nav-btn active" data-panel="archivePanel"><strong>⌕</strong>Archivo</button>
+  <button class="nav-btn" data-panel="statsPanel"><strong>▥</strong>Datos</button>
+  <button class="nav-btn" data-panel="favPanel"><strong>★</strong>Favoritos</button>
+  <button class="nav-btn" data-panel="aboutPanel"><strong>ⓘ</strong>Información</button>
+</nav>
 <main>
 <section class="stats">
   <div class="stat"><b>1,419</b><span>festejos agrupados</span></div>
@@ -206,12 +323,7 @@ select,.icon-btn{min-height:44px;border:1px solid var(--line);border-radius:13px
 </section>
 </main>
 
-<nav class="bottom-nav">
-  <button class="nav-btn active" data-panel="archivePanel"><strong>⌕</strong>Archivo</button>
-  <button class="nav-btn" data-panel="statsPanel"><strong>▥</strong>Datos</button>
-  <button class="nav-btn" data-panel="favPanel"><strong>★</strong>Favoritos</button>
-  <button class="nav-btn" data-panel="aboutPanel"><strong>ⓘ</strong>Información</button>
-</nav>
+
 
 <script src="morante-data.js"></script>
 <script>
