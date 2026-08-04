@@ -125,7 +125,7 @@ select,.icon-btn{min-height:44px;border:1px solid var(--line);border-radius:13px
     <input id="aiQuestion" type="search" inputmode="search"
            placeholder="Ej.: ¿Cuántas tardes toreó en Sevilla?"
            enterkeyhint="search" autocapitalize="sentences">
-    <button id="aiAsk" type="submit">Preguntar</button>
+    <button id="aiAskBtn" type="submit">Preguntar</button>
   </form>
   <div class="ai-examples">
     <button type="button" class="ai-chip" data-q="¿Cuántas tardes toreó Morante en Sevilla?">Tardes en Sevilla</button>
@@ -183,7 +183,7 @@ select,.icon-btn{min-height:44px;border:1px solid var(--line);border-radius:13px
   <button class="nav-btn" data-panel="aboutPanel"><strong>ⓘ</strong>Información</button>
 </nav>
 
-<script src="morante-data-v5.js"></script>
+<script src="morante-data-v6.js"></script>
 <script>
 const DATA=window.MORANTE_DATA||[];
 const PLACE_RANK=[["Sevilla", 79], ["Madrid", 51], ["El Puerto de Santa María", 38], ["Málaga", 30], ["Jerez de la Frontera", 26], ["Valencia", 26], ["Granada", 25], ["Valladolid", 25], ["Córdoba", 24], ["Salamanca", 21], ["Olivenza (Badajoz)", 21], ["Huelva", 20], ["Santander (Cantabria)", 20], ["Almería", 20], ["Algeciras (Cádiz)", 20], ["Alicante", 19], ["Bilbao (Vizcaya)", 19], ["Sanlúcar de Barrameda (Cádiz)", 18], ["Nimes", 17], ["Cuenca", 17]];
@@ -232,8 +232,8 @@ function aiTopGan(rows){
  const m=new Map(); rows.forEach(e=>e.actuaciones.forEach(a=>{const g=String(a.ganaderia||'').replace(/^\s*\d+\s+/,'').trim();if(g)m.set(g,(m.get(g)||0)+1)}));
  return [...m.entries()].sort((a,b)=>b[1]-a[1])[0]||null;
 }
-function aiAsk(){
- const question=$('aiQuestion').value.trim(),q=norm(question),{rows,place,year}=aiRows(question),scope=[place,year].filter(Boolean).join(' · ')||'Todo el archivo';
+function runArchiveQuestion(){
+ const question=document.getElementById('aiQuestion').value.trim(),q=norm(question),{rows,place,year}=aiRows(question),scope=[place,year].filter(Boolean).join(' · ')||'Todo el archivo';
  let ans='';
  if(!q) ans='Escribe una pregunta.';
  else if(/cuantas?.*(tardes|festejos|corridas)|numero.*(tardes|festejos|corridas)/.test(q))
@@ -247,7 +247,7 @@ function aiAsk(){
  } else if(place||year){
    const top=aiTopGan(rows); ans=`<strong>${aiEsc(scope)}</strong><span class="big">${rows.length.toLocaleString('es-ES')} festejos</span>${aiEars(rows).toLocaleString('es-ES')} orejas${top?` · Ganadería más registrada: ${aiEsc(top[0])} (${top[1]})`:''}.`;
  } else ans='Prueba con: “¿Cuántas tardes toreó en Sevilla?”, “¿Cuántas orejas cortó en 2026?” o “¿Qué ganadería ha toreado más en El Puerto de Santa María?”.';
- const box=$('aiAnswer'); box.innerHTML=ans; box.classList.add('show');
+ const box=document.getElementById('aiAnswer'); if(box){box.innerHTML=ans;box.classList.add('show');}
 }
 
 function countOrejas(text){
@@ -336,19 +336,29 @@ function init(){
  if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('./sw.js');
 }
 let timer;$('q').oninput=()=>{clearTimeout(timer);timer=setTimeout(()=>apply(),120)};$('year').onchange=()=>apply();$('type').onchange=()=>
-$('aiForm').addEventListener('submit',e=>{
+document.getElementById('aiForm').addEventListener('submit',function(e){
   e.preventDefault();
-  aiAsk();
-  $('aiQuestion').blur();
-  setTimeout(()=>{ $('aiAnswer').scrollIntoView({behavior:'smooth',block:'nearest'}); },50);
+  runArchiveQuestion();
+  var input=document.getElementById('aiQuestion');
+  if(input) input.blur();
+  setTimeout(function(){
+    var answer=document.getElementById('aiAnswer');
+    if(answer && answer.scrollIntoView) answer.scrollIntoView();
+  },80);
 });
-document.querySelectorAll('.ai-chip').forEach(b=>b.addEventListener('click',e=>{
-  e.preventDefault();
-  $('aiQuestion').value=b.dataset.q||'';
-  aiAsk();
-  $('aiQuestion').blur();
-  setTimeout(()=>{ $('aiAnswer').scrollIntoView({behavior:'smooth',block:'nearest'}); },50);
-}));
+Array.prototype.forEach.call(document.querySelectorAll('.ai-chip'),function(b){
+  b.addEventListener('click',function(e){
+    e.preventDefault();
+    var input=document.getElementById('aiQuestion');
+    if(input) input.value=b.getAttribute('data-q')||'';
+    runArchiveQuestion();
+    if(input) input.blur();
+    setTimeout(function(){
+      var answer=document.getElementById('aiAnswer');
+      if(answer && answer.scrollIntoView) answer.scrollIntoView();
+    },80);
+  });
+});
 
 apply();
 $('prev').onclick=()=>{page--;render();scrollTo(0,0)};$('next').onclick=()=>{page++;render();scrollTo(0,0)};
@@ -365,6 +375,17 @@ if ('serviceWorker' in navigator) {
 if ('caches' in window) {
   caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
 }
+</script>
+
+
+<script>
+window.addEventListener('error',function(){
+  var box=document.getElementById('aiAnswer');
+  if(box){
+    box.innerHTML='Ha ocurrido un error al procesar la pregunta. Recarga la página e inténtalo de nuevo.';
+    box.classList.add('show');
+  }
+});
 </script>
 
 </body></html>
