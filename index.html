@@ -54,7 +54,7 @@ select,.icon-btn{min-height:44px;border:1px solid var(--line);border-radius:13px
 .ai-title{font-weight:800;font-size:17px;margin-bottom:8px}.ai-sub{color:var(--muted);font-size:13px;margin-bottom:10px}
 .ai-row{display:flex;gap:8px}.ai-row input{flex:1;min-width:0}.ai-row button{white-space:nowrap}
 .ai-answer{display:none;margin-top:12px;padding:13px;border-radius:14px;background:rgba(178,135,54,.10);border:1px solid rgba(178,135,54,.35);line-height:1.45}
-.ai-answer.show{display:block}.ai-answer .big{font:700 29px Georgia,serif;color:var(--gold);display:block;margin:2px 0}
+.ai-answer.show{display:block!important;min-height:48px}.ai-answer .big{font:700 29px Georgia,serif;color:var(--gold);display:block;margin:2px 0}
 .ai-answer .small{font-size:13px;color:var(--muted)}
 .ai-examples{display:flex;gap:6px;overflow:auto;padding-top:9px}.ai-chip{font-size:12px;border:1px solid var(--border);border-radius:999px;padding:6px 9px;background:var(--bg);white-space:nowrap;cursor:pointer}
 @media(max-width:560px){
@@ -125,7 +125,7 @@ select,.icon-btn{min-height:44px;border:1px solid var(--line);border-radius:13px
     <input id="aiQuestion" type="search" inputmode="search"
            placeholder="Ej.: ¿Cuántas tardes toreó en Sevilla?"
            enterkeyhint="search" autocapitalize="sentences">
-    <button id="aiAskBtn" type="submit">Preguntar</button>
+    <button id="aiAskBtn" type="button">Preguntar</button>
   </form>
   <div class="ai-examples">
     <button type="button" class="ai-chip" data-q="¿Cuántas tardes toreó Morante en Sevilla?">Tardes en Sevilla</button>
@@ -133,7 +133,7 @@ select,.icon-btn{min-height:44px;border:1px solid var(--line);border-radius:13px
     <button type="button" class="ai-chip" data-q="¿Qué ganadería ha toreado más en Sevilla?">Ganadería más lidiada</button>
     <button type="button" class="ai-chip" data-q="¿Cuántas tardes toreó en 2026?">Tardes en 2026</button>
   </div>
-  <div id="aiAnswer" class="ai-answer" aria-live="polite"></div>
+  <div id="aiAnswer" class="ai-answer" aria-live="polite"></div><span id="buildVersion" hidden>v7-fixed</span>
 </section>
 
 <section id="citySummary" class="city-summary">
@@ -183,7 +183,7 @@ select,.icon-btn{min-height:44px;border:1px solid var(--line);border-radius:13px
   <button class="nav-btn" data-panel="aboutPanel"><strong>ⓘ</strong>Información</button>
 </nav>
 
-<script src="morante-data-v6.js"></script>
+<script src="morante-data-v7.js"></script>
 <script>
 const DATA=window.MORANTE_DATA||[];
 const PLACE_RANK=[["Sevilla", 79], ["Madrid", 51], ["El Puerto de Santa María", 38], ["Málaga", 30], ["Jerez de la Frontera", 26], ["Valencia", 26], ["Granada", 25], ["Valladolid", 25], ["Córdoba", 24], ["Salamanca", 21], ["Olivenza (Badajoz)", 21], ["Huelva", 20], ["Santander (Cantabria)", 20], ["Almería", 20], ["Algeciras (Cádiz)", 20], ["Alicante", 19], ["Bilbao (Vizcaya)", 19], ["Sanlúcar de Barrameda (Cádiz)", 18], ["Nimes", 17], ["Cuenca", 17]];
@@ -335,16 +335,19 @@ function init(){
  renderRank('placesRank',PLACE_RANK);renderRank('ganRank',GAN_RANK);apply();renderFavs();
  if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('./sw.js');
 }
-let timer;$('q').oninput=()=>{clearTimeout(timer);timer=setTimeout(()=>apply(),120)};$('year').onchange=()=>apply();$('type').onchange=()=>
-document.getElementById('aiForm').addEventListener('submit',function(e){
+let timer;$('q').oninput=()=>{clearTimeout(timer);timer=setTimeout(()=>apply(),120)};$('year').onchange=()=>apply();$('type').onchange=()=>apply();
+document.getElementById('aiAskBtn').addEventListener('click',function(e){
   e.preventDefault();
   runArchiveQuestion();
   var input=document.getElementById('aiQuestion');
   if(input) input.blur();
-  setTimeout(function(){
-    var answer=document.getElementById('aiAnswer');
-    if(answer && answer.scrollIntoView) answer.scrollIntoView();
-  },80);
+});
+document.getElementById('aiQuestion').addEventListener('keydown',function(e){
+  if(e.key==='Enter' || e.keyCode===13){
+    e.preventDefault();
+    runArchiveQuestion();
+    this.blur();
+  }
 });
 Array.prototype.forEach.call(document.querySelectorAll('.ai-chip'),function(b){
   b.addEventListener('click',function(e){
@@ -353,10 +356,6 @@ Array.prototype.forEach.call(document.querySelectorAll('.ai-chip'),function(b){
     if(input) input.value=b.getAttribute('data-q')||'';
     runArchiveQuestion();
     if(input) input.blur();
-    setTimeout(function(){
-      var answer=document.getElementById('aiAnswer');
-      if(answer && answer.scrollIntoView) answer.scrollIntoView();
-    },80);
   });
 });
 
