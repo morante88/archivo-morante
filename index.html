@@ -3,6 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <meta name="theme-color" content="#171c2d">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -54,7 +57,16 @@ select,.icon-btn{min-height:44px;border:1px solid var(--line);border-radius:13px
 .ai-answer.show{display:block}.ai-answer .big{font:700 29px Georgia,serif;color:var(--gold);display:block;margin:2px 0}
 .ai-answer .small{font-size:13px;color:var(--muted)}
 .ai-examples{display:flex;gap:6px;overflow:auto;padding-top:9px}.ai-chip{font-size:12px;border:1px solid var(--border);border-radius:999px;padding:6px 9px;background:var(--bg);white-space:nowrap;cursor:pointer}
-@media(max-width:560px){.ai-row{flex-direction:column}.ai-row button{width:100%}}
+@media(max-width:560px){
+      .ai-box{padding:14px 12px;margin-top:10px}
+      .ai-form{display:flex;flex-direction:column;gap:9px}
+      .ai-form input{font-size:16px!important;min-height:48px;width:100%;box-sizing:border-box}
+      .ai-form button{width:100%;min-height:48px;font-size:16px;font-weight:800}
+      .ai-answer{font-size:15px}
+      .ai-answer .big{font-size:31px}
+      .ai-examples{padding-bottom:2px}
+      .ai-chip{min-height:36px}
+    }
 
 .cards{display:grid;gap:12px}
 .card{background:var(--surface);border:1px solid var(--line);border-left:7px solid var(--gold);border-radius:18px;padding:16px;box-shadow:var(--shadow)}
@@ -105,21 +117,25 @@ select,.icon-btn{min-height:44px;border:1px solid var(--line);border-radius:13px
     </div>
   </div>
   
-<section class="ai-box">
+
+<section class="ai-box" id="aiBox">
   <div class="ai-title">🤖 Pregunta al Archivo Morante</div>
-  <div class="ai-sub">Escribe una pregunta normal. La respuesta se calcula con los datos del archivo.</div>
-  <div class="ai-row">
-    <input id="aiQuestion" type="search" placeholder="Ej.: ¿Cuántas tardes toreó Morante en Sevilla?">
-    <button id="aiAsk" type="button">Preguntar</button>
-  </div>
+  <div class="ai-sub">Pregunta por ciudades, temporadas, orejas o ganaderías.</div>
+  <form id="aiForm" class="ai-form" autocomplete="off">
+    <input id="aiQuestion" type="search" inputmode="search"
+           placeholder="Ej.: ¿Cuántas tardes toreó en Sevilla?"
+           enterkeyhint="search" autocapitalize="sentences">
+    <button id="aiAsk" type="submit">Preguntar</button>
+  </form>
   <div class="ai-examples">
-    <button class="ai-chip" data-q="¿Cuántas tardes toreó Morante en Sevilla?">Tardes en Sevilla</button>
-    <button class="ai-chip" data-q="¿Cuántas orejas cortó en El Puerto de Santa María?">Orejas en El Puerto</button>
-    <button class="ai-chip" data-q="¿Qué ganadería ha toreado más en Sevilla?">Ganadería más lidiada</button>
-    <button class="ai-chip" data-q="¿Cuántas tardes toreó en 2026?">Tardes en 2026</button>
+    <button type="button" class="ai-chip" data-q="¿Cuántas tardes toreó Morante en Sevilla?">Tardes en Sevilla</button>
+    <button type="button" class="ai-chip" data-q="¿Cuántas orejas cortó en El Puerto de Santa María?">Orejas en El Puerto</button>
+    <button type="button" class="ai-chip" data-q="¿Qué ganadería ha toreado más en Sevilla?">Ganadería más lidiada</button>
+    <button type="button" class="ai-chip" data-q="¿Cuántas tardes toreó en 2026?">Tardes en 2026</button>
   </div>
-  <div id="aiAnswer" class="ai-answer"></div>
+  <div id="aiAnswer" class="ai-answer" aria-live="polite"></div>
 </section>
+
 <section id="citySummary" class="city-summary">
   <h2 id="citySummaryName"></h2>
   <div class="city-summary-grid">
@@ -167,7 +183,7 @@ select,.icon-btn{min-height:44px;border:1px solid var(--line);border-radius:13px
   <button class="nav-btn" data-panel="aboutPanel"><strong>ⓘ</strong>Información</button>
 </nav>
 
-<script src="data.js?v=ia1"></script>
+<script src="morante-data-v5.js"></script>
 <script>
 const DATA=window.MORANTE_DATA||[];
 const PLACE_RANK=[["Sevilla", 79], ["Madrid", 51], ["El Puerto de Santa María", 38], ["Málaga", 30], ["Jerez de la Frontera", 26], ["Valencia", 26], ["Granada", 25], ["Valladolid", 25], ["Córdoba", 24], ["Salamanca", 21], ["Olivenza (Badajoz)", 21], ["Huelva", 20], ["Santander (Cantabria)", 20], ["Almería", 20], ["Algeciras (Cádiz)", 20], ["Alicante", 19], ["Bilbao (Vizcaya)", 19], ["Sanlúcar de Barrameda (Cádiz)", 18], ["Nimes", 17], ["Cuenca", 17]];
@@ -320,9 +336,19 @@ function init(){
  if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('./sw.js');
 }
 let timer;$('q').oninput=()=>{clearTimeout(timer);timer=setTimeout(()=>apply(),120)};$('year').onchange=()=>apply();$('type').onchange=()=>
-$('aiAsk').addEventListener('click',aiAsk);
-$('aiQuestion').addEventListener('keydown',e=>{if(e.key==='Enter')aiAsk()});
-document.querySelectorAll('.ai-chip').forEach(b=>b.addEventListener('click',()=>{$('aiQuestion').value=b.dataset.q||'';aiAsk()}));
+$('aiForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  aiAsk();
+  $('aiQuestion').blur();
+  setTimeout(()=>{ $('aiAnswer').scrollIntoView({behavior:'smooth',block:'nearest'}); },50);
+});
+document.querySelectorAll('.ai-chip').forEach(b=>b.addEventListener('click',e=>{
+  e.preventDefault();
+  $('aiQuestion').value=b.dataset.q||'';
+  aiAsk();
+  $('aiQuestion').blur();
+  setTimeout(()=>{ $('aiAnswer').scrollIntoView({behavior:'smooth',block:'nearest'}); },50);
+}));
 
 apply();
 $('prev').onclick=()=>{page--;render();scrollTo(0,0)};$('next').onclick=()=>{page++;render();scrollTo(0,0)};
@@ -331,4 +357,14 @@ document.querySelectorAll('.nav-btn').forEach(btn=>btn.onclick=()=>{document.que
  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));$(btn.dataset.panel).classList.add('active');if(btn.dataset.panel==='favPanel')renderFavs();scrollTo(0,0);});
 init();
 </script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister()));
+}
+if ('caches' in window) {
+  caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
+}
+</script>
+
 </body></html>
