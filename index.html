@@ -159,6 +159,15 @@ select,.icon-btn{min-height:44px;border:1px solid var(--line);border-radius:13px
   .nav-btn{min-width:72px;flex:1}
 }
 
+
+.bio-wrap{display:grid;grid-template-columns:150px 1fr;gap:16px;margin:16px 0}
+.bio-photo{width:100%;height:100%;min-height:190px;object-fit:cover;object-position:36% 42%;border-radius:16px;border:1px solid var(--line)}
+.bio-card,.efem-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:var(--shadow)}
+.bio-card h2,.efem-card h2{margin:0 0 8px}.bio-card p{line-height:1.55}
+.bio-more summary{cursor:pointer;font-weight:800;color:var(--wine)}
+.efem-card{margin:0 0 16px}.efem-item{padding:9px 0;border-top:1px solid var(--line)}
+.efem-year{font-weight:800;color:var(--wine)}
+@media(max-width:600px){.bio-wrap{grid-template-columns:1fr}.bio-photo{height:230px;min-height:0}}
 </style>
 </head>
 <body>
@@ -222,7 +231,18 @@ select,.icon-btn{min-height:44px;border:1px solid var(--line);border-radius:13px
   <div class="city-summary-grid">
     <div class="city-stat"><b id="citySummaryFestejos">0</b><span>festejos</span></div>
     <div class="city-stat"><b id="citySummaryOrejas">0</b><span>orejas</span></div>
-    <div class="city-stat"><b id="citySummaryEficiencia">0,00</b><span>orejas / festejo</span></div>
+    <div class="city-stat"><b
+<div class="bio-wrap">
+<img class="bio-photo" src="morante-biografia.jpg" alt="Morante de la Puebla toreando">
+<div class="bio-card"><h2>Sobre Morante de la Puebla</h2>
+<p>Nació en Sevilla, ciudad a la que acudían muchas mujeres de localidades cercanas para dar a luz. Tanto él como su familia vivían en <strong>La Puebla del Río</strong>, localidad de la que se siente natural y de la que toma su nombre artístico.</p>
+<details class="bio-more"><summary>Leer biografía completa</summary>
+<p>Su pasión por el toreo comenzó a los cinco años y procede de una familia no taurina. Su aprendizaje no tuvo lugar en escuelas taurinas, sino en el campo abierto, aprendiendo de aficionados toreros de la zona.</p>
+<p>Desde pequeño participó como oyente en las tertulias taurinas que se formaban en los bares locales y acudió como espectador a becerradas locales y a plazas de Sevilla.</p>
+<p>Su formación se desarrolló en la marisma, toreando desde niño. Allí fue descubierto por <strong>Leonardo Muñoz</strong>, padre del torero Emilio Muñoz, quien fue su primer apoderado.</p>
+</details></div></div>
+<div class="efem-card"><h2>📅 Tal día como hoy</h2><div id="todayHistory">Consultando el archivo…</div></div>
+ id="citySummaryEficiencia">0,00</b><span>orejas / festejo</span></div>
     <div class="city-stat"><b id="citySummaryTemporadas">0</b><span>temporadas</span></div>
   </div>
   <div class="city-summary-extra">
@@ -851,6 +871,16 @@ window.addEventListener('error',function(){
     box.classList.add('show');
   }
 });
+
+function renderTodayHistory(){
+ const box=document.getElementById('todayHistory'); if(!box||typeof DATA==='undefined')return;
+ const now=new Date(),d=String(now.getDate()).padStart(2,'0'),m=String(now.getMonth()+1).padStart(2,'0');
+ const rows=DATA.filter(e=>{const p=String(e.fecha_es||'').split('/');return p.length>1&&p[0].padStart(2,'0')===d&&p[1].padStart(2,'0')===m}).sort((a,b)=>Number(b.anio)-Number(a.anio));
+ const safe=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ if(!rows.length){box.innerHTML='<span class="note">No hay actuaciones registradas en esta fecha.</span>';return}
+ box.innerHTML=rows.slice(0,10).map(e=>`<div class="efem-item"><span class="efem-year">${safe(e.anio)}</span> · <b>${safe(e.lugar)}</b> — ${safe(e.tipo)}<br><span class="note">${(e.actuaciones||[]).map(a=>safe(a.ganaderia)+': '+safe(a.resultado)).join(' · ')}</span></div>`).join('');
+}
+window.addEventListener('load',renderTodayHistory);
 </script>
 
 </body></html>
