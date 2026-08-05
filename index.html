@@ -105,6 +105,25 @@ select,.icon-btn{min-height:44px;border:1px solid var(--line);border-radius:13px
 .rank-row b{max-width:78%}
 .note{font-size:12px;color:var(--muted);line-height:1.45;margin:10px 2px}
 @media(min-width:760px){.stats{grid-template-columns:repeat(4,1fr)}.cards{grid-template-columns:1fr 1fr}.filters{grid-template-columns:1fr 1fr auto}}
+
+/* ===== ESTADÍSTICAS Y BUSCADOR AVANZADOS ===== */
+.rank-controls{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 12px}
+.rank-tab{border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:8px 11px;border-radius:999px;font-weight:700;font-size:12px;cursor:pointer}
+.rank-tab.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.rank-block{margin-bottom:24px}
+.rank-row{cursor:pointer;transition:.15s ease}
+.rank-row:hover{transform:translateY(-1px);border-color:var(--gold)}
+.rank-row small{display:block;color:var(--muted);font-weight:400;margin-top:2px}
+.rank-value{text-align:right}
+.rank-value b{display:block;font-size:16px;color:var(--wine)}
+.rank-value span{font-size:11px;color:var(--muted)}
+.stats-summary{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:10px 0 16px}
+.stats-summary .stat{min-height:82px}
+.ai-help{margin-top:10px;font-size:12px;color:var(--muted)}
+.ai-answer .answer-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.ai-answer .answer-actions button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:7px 10px;font-size:12px}
+@media(min-width:760px){.stats-summary{grid-template-columns:repeat(4,1fr)}}
+
 </style>
 </head>
 <body>
@@ -135,7 +154,7 @@ select,.icon-btn{min-height:44px;border:1px solid var(--line);border-radius:13px
 
 <section class="ai-box" id="aiBox">
   <div class="ai-title">🤖 Pregunta al Archivo Morante</div>
-  <div class="ai-sub">Pregunta por ciudades, temporadas, orejas o ganaderías.</div>
+  <div class="ai-sub">Pregunta en lenguaje normal por ciudades, años, orejas, ganaderías, primeras/últimas tardes o comparaciones.</div>
   <form id="aiForm" class="ai-form" autocomplete="off">
     <input id="aiQuestion" type="search" inputmode="search"
            placeholder="Ej.: ¿Cuántas tardes toreó en Sevilla?"
@@ -147,8 +166,11 @@ select,.icon-btn{min-height:44px;border:1px solid var(--line);border-radius:13px
     <button type="button" class="ai-chip" data-q="¿Cuántas orejas cortó en El Puerto de Santa María?">Orejas en El Puerto</button>
     <button type="button" class="ai-chip" data-q="¿Qué ganadería ha toreado más en Sevilla?">Ganadería más lidiada</button>
     <button type="button" class="ai-chip" data-q="¿Cuántas tardes toreó en 2026?">Tardes en 2026</button>
+    <button type="button" class="ai-chip" data-q="¿Cuál fue la última tarde en Pamplona?">Última en Pamplona</button>
+    <button type="button" class="ai-chip" data-q="Compara Sevilla y El Puerto de Santa María">Comparar plazas</button>
   </div>
-  <div id="aiAnswer" class="ai-answer" aria-live="polite"></div><span id="buildVersion" hidden>v7-fixed</span>
+  <div id="aiAnswer" class="ai-answer" aria-live="polite"></div>
+  <div class="ai-help">Ejemplos: “¿Cuántas orejas cortó en Sevilla entre 2022 y 2026?”, “¿Qué ganadería toreó más en Madrid?”, “¿Cuál fue su primera tarde en Huelva?”</div><span id="buildVersion" hidden>potente-v1</span>
 </section>
 
 
@@ -178,20 +200,44 @@ select,.icon-btn{min-height:44px;border:1px solid var(--line);border-radius:13px
   <div class="pager"><button id="prev">Anterior</button><span id="page"></span><button id="next">Siguiente</button></div>
 </section>
 
+
 <section id="statsPanel" class="panel">
   <h2>Estadísticas</h2>
-  <p class="note">Los recuentos de orejas y rabos son detecciones automáticas del texto y deben revisarse antes de publicarlos como dato oficial.</p>
-  <div class="stats">
-    <div class="stat"><b>1196</b><span>orejas detectadas</span></div>
-    <div class="stat"><b>54</b><span>rabos detectados</span></div>
-    <div class="stat"><b>2025</b><span>último año</span></div>
-    <div class="stat"><b>1993</b><span>primer año</span></div>
+  <p class="note">Rankings calculados automáticamente a partir del archivo actual.</p>
+
+  <div class="stats-summary">
+    <div class="stat"><b id="stFestejos">0</b><span>festejos</span></div>
+    <div class="stat"><b id="stOrejas">0</b><span>orejas detectadas</span></div>
+    <div class="stat"><b id="stPlazas">0</b><span>plazas/localidades</span></div>
+    <div class="stat"><b id="stGanaderias">0</b><span>ganaderías</span></div>
   </div>
-  <h2>Plazas con más festejos</h2><div id="placesRank" class="rank"></div>
-  <h2>Ganaderías más registradas</h2><div id="ganRank" class="rank"></div>
+
+  <div class="rank-block">
+    <h2>Ranking de plazas</h2>
+    <div class="rank-controls" id="placeRankControls">
+      <button class="rank-tab active" data-rank="festejos">Más festejos</button>
+      <button class="rank-tab" data-rank="orejas">Más orejas</button>
+      <button class="rank-tab" data-rank="eficiencia">Mejor eficiencia</button>
+    </div>
+    <div id="placesRank" class="rank"></div>
+  </div>
+
+  <div class="rank-block">
+    <h2>Ranking de ganaderías</h2>
+    <div class="rank-controls" id="ganRankControls">
+      <button class="rank-tab active" data-rank="actuaciones">Más lidiadas</button>
+      <button class="rank-tab" data-rank="orejas">Más orejas</button>
+    </div>
+    <div id="ganRank" class="rank"></div>
+  </div>
+
+  <div class="rank-block">
+    <h2>Temporadas</h2>
+    <div id="seasonRank" class="rank"></div>
+  </div>
 </section>
 
-<section id="favPanel" class="panel">
+<section id="favPanel class="panel">
   <h2>Favoritos</h2>
   <div id="favCards" class="cards"></div>
 </section>
@@ -208,7 +254,7 @@ select,.icon-btn{min-height:44px;border:1px solid var(--line);border-radius:13px
 
 <nav class="bottom-nav">
   <button class="nav-btn active" data-panel="archivePanel"><strong>⌕</strong>Archivo</button>
-  <button class="nav-btn" data-panel="statsPanel"><strong>▥</strong>Datos</button>
+  <button class="nav-btn" data-panel="statsPanel"><strong>▥</strong>Estadísticas</button>
   <button class="nav-btn" data-panel="favPanel"><strong>★</strong>Favoritos</button>
   <button class="nav-btn" data-panel="aboutPanel"><strong>ⓘ</strong>Información</button>
 </nav>
@@ -216,8 +262,6 @@ select,.icon-btn{min-height:44px;border:1px solid var(--line);border-radius:13px
 <script src="morante-data.js"></script>
 <script>
 const DATA=window.MORANTE_DATA||[];
-const PLACE_RANK=[["Sevilla", 79], ["Madrid", 51], ["El Puerto de Santa María", 38], ["Málaga", 30], ["Jerez de la Frontera", 26], ["Valencia", 26], ["Granada", 25], ["Valladolid", 25], ["Córdoba", 24], ["Salamanca", 21], ["Olivenza (Badajoz)", 21], ["Huelva", 20], ["Santander (Cantabria)", 20], ["Almería", 20], ["Algeciras (Cádiz)", 20], ["Alicante", 19], ["Bilbao (Vizcaya)", 19], ["Sanlúcar de Barrameda (Cádiz)", 18], ["Nimes", 17], ["Cuenca", 17]];
-const GAN_RANK=[["Núñez del Cuvillo", 315], ["Juan Pedro Domecq", 258], ["Zalduendo", 172], ["Garcigrande", 99], ["Jandilla", 85], ["Victoriano del Río Cortés", 69], ["Alcurrucén", 63], ["Domingo Hernández Martín", 61], ["Hnos. García Jiménez", 60], ["El Pilar", 57], ["Daniel Ruiz Yagüe", 52], ["Gavira", 49], ["Santiago Domecq Bohórquez", 41], ["Toros de El Torero", 38], ["Toros de Parladé", 38], ["Luis Algarra Polera", 30], ["Torrestrella", 29], ["Vellosino", 28], ["Puerto de San Lorenzo", 28], ["Montalvo", 27]];
 let filtered=[],page=1; const PAGE_SIZE=24; const $=id=>document.getElementById(id);
 const norm=s=>String(s??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
@@ -243,43 +287,111 @@ function cardHTML(e){
 }
 
 
+
 function aiEsc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
-function aiPlace(q){
- const nq=norm(q),places=[...new Set(DATA.map(e=>e.lugar).filter(Boolean))].sort((a,b)=>b.length-a.length);
- for(const p of places) if(nq.includes(norm(p))) return p;
- for(const p of places){const base=norm(p.replace(/\s*\([^)]*\)\s*/g,'')); if(base&&nq.includes(base)&&!p.includes('('))return p}
+function aiPlacesInQuestion(question){
+ const nq=norm(question);
+ const places=[...new Set(DATA.map(e=>e.lugar).filter(Boolean))].sort((a,b)=>b.length-a.length);
+ const found=[];
+ for(const p of places){
+   const np=norm(p);
+   if(np && nq.includes(np) && !found.some(x=>norm(x)===np)) found.push(p);
+ }
+ return found;
+}
+function aiPlace(q){return aiPlacesInQuestion(q)[0]||null}
+function aiYears(q){
+ const matches=String(q).match(/\b(?:19|20)\d{2}\b/g)||[];
+ return [...new Set(matches.map(Number))];
+}
+function aiYear(q){return aiYears(q)[0]||null}
+function aiRange(q){
+ const ys=aiYears(q);
+ if(ys.length>=2) return [Math.min(...ys),Math.max(...ys)];
  return null;
 }
-function aiYear(q){const m=String(q).match(/\b(?:19|20)\d{2}\b/);return m?Number(m[0]):null}
 function aiRows(q){
- const place=aiPlace(q),year=aiYear(q);let rows=DATA.slice();
+ const place=aiPlace(q),range=aiRange(q),year=aiYear(q);let rows=DATA.slice();
  if(place)rows=rows.filter(e=>norm(e.lugar)===norm(place));
- if(year)rows=rows.filter(e=>Number(e.anio)===year);
- return {rows,place,year};
+ if(range)rows=rows.filter(e=>Number(e.anio)>=range[0]&&Number(e.anio)<=range[1]);
+ else if(year)rows=rows.filter(e=>Number(e.anio)===year);
+ return {rows,place,year,range};
 }
 function aiEars(rows){return rows.reduce((x,e)=>x+e.actuaciones.reduce((s,a)=>s+countOrejas(a.resultado||''),0),0)}
 function aiTopGan(rows){
- const m=new Map(); rows.forEach(e=>e.actuaciones.forEach(a=>{const g=String(a.ganaderia||'').replace(/^\s*\d+\s+/,'').trim();if(g)m.set(g,(m.get(g)||0)+1)}));
+ const m=new Map(); rows.forEach(e=>e.actuaciones.forEach(a=>{const g=normalizeGanaderiaName(a.ganaderia);if(g)m.set(g,(m.get(g)||0)+1)}));
  return [...m.entries()].sort((a,b)=>b[1]-a[1])[0]||null;
 }
-function runArchiveQuestion(){
- const question=document.getElementById('aiQuestion').value.trim(),q=norm(question),{rows,place,year}=aiRows(question),scope=[place,year].filter(Boolean).join(' · ')||'Todo el archivo';
- let ans='';
- if(!q) ans='Escribe una pregunta.';
- else if(/cuantas?.*(tardes|festejos|corridas)|numero.*(tardes|festejos|corridas)/.test(q))
-   ans=`<strong>${aiEsc(scope)}</strong><span class="big">${rows.length.toLocaleString('es-ES')}</span>festejos encontrados.`;
- else if(q.includes('oreja'))
-   ans=`<strong>${aiEsc(scope)}</strong><span class="big">${aiEars(rows).toLocaleString('es-ES')}</span>orejas registradas.<div class="small">${rows.length.toLocaleString('es-ES')} festejos en este ámbito.</div>`;
- else if(q.includes('ganaderia') && (q.includes('mas')||q.includes('más'))){
-   const top=aiTopGan(rows); ans=top?`<strong>${aiEsc(scope)}</strong><span class="big">${aiEsc(top[0])}</span>${top[1]} actuaciones registradas.`:`No encuentro ganaderías para ${aiEsc(scope)}.`;
- } else if(/cuantos?.*(toros|reses|actuaciones)/.test(q)){
-   const n=rows.reduce((s,e)=>s+e.actuaciones.length,0); ans=`<strong>${aiEsc(scope)}</strong><span class="big">${n.toLocaleString('es-ES')}</span>actuaciones/reses registradas.`;
- } else if(place||year){
-   const top=aiTopGan(rows); ans=`<strong>${aiEsc(scope)}</strong><span class="big">${rows.length.toLocaleString('es-ES')} festejos</span>${aiEars(rows).toLocaleString('es-ES')} orejas${top?` · Ganadería más registrada: ${aiEsc(top[0])} (${top[1]})`:''}.`;
- } else ans='Prueba con: “¿Cuántas tardes toreó en Sevilla?”, “¿Cuántas orejas cortó en 2026?” o “¿Qué ganadería ha toreado más en El Puerto de Santa María?”.';
- const box=document.getElementById('aiAnswer'); if(box){box.innerHTML=ans;box.classList.add('show');}
+function aiFirstLast(rows,which){
+ if(!rows.length)return null;
+ const sorted=[...rows].sort((a,b)=>String(a.fecha).localeCompare(String(b.fecha)));
+ return which==='last'?sorted[sorted.length-1]:sorted[0];
 }
+function aiScopeLabel(place,year,range){
+ const bits=[];
+ if(place)bits.push(place);
+ if(range)bits.push(`${range[0]}–${range[1]}`);
+ else if(year)bits.push(year);
+ return bits.join(' · ')||'Todo el archivo';
+}
+function aiComparePlaces(question){
+ const places=aiPlacesInQuestion(question);
+ if(places.length<2)return null;
+ return places.slice(0,2).map(place=>{
+   const rows=DATA.filter(e=>norm(e.lugar)===norm(place));
+   return {place,rows:rows.length,ears:aiEars(rows),eff:rows.length?aiEars(rows)/rows.length:0,top:aiTopGan(rows)};
+ });
+}
+function runArchiveQuestion(){
+ const question=document.getElementById('aiQuestion').value.trim(),q=norm(question);
+ const box=document.getElementById('aiAnswer');
+ if(!q){box.innerHTML='Escribe una pregunta.';box.classList.add('show');return;}
 
+ if(q.includes('compara')||q.includes('comparar')||q.includes('vs')){
+   const c=aiComparePlaces(question);
+   if(c){
+     box.innerHTML=`<strong>Comparación</strong>
+       <div class="big">${aiEsc(c[0].place)} vs ${aiEsc(c[1].place)}</div>
+       ${aiEsc(c[0].place)}: <b>${c[0].rows}</b> festejos · <b>${c[0].ears}</b> orejas · ${c[0].eff.toLocaleString('es-ES',{maximumFractionDigits:2})} orejas/festejo<br>
+       ${aiEsc(c[1].place)}: <b>${c[1].rows}</b> festejos · <b>${c[1].ears}</b> orejas · ${c[1].eff.toLocaleString('es-ES',{maximumFractionDigits:2})} orejas/festejo`;
+     box.classList.add('show');return;
+   }
+ }
+
+ const {rows,place,year,range}=aiRows(question);
+ const scope=aiScopeLabel(place,year,range);
+
+ if(/ultima|última|ultimo|último/.test(q)){
+   const e=aiFirstLast(rows,'last');
+   box.innerHTML=e?`<strong>Última actuación · ${aiEsc(scope)}</strong><span class="big">${aiEsc(e.fecha_es)}</span>${aiEsc(e.lugar)} · ${aiEsc(e.tipo)}`:`No encuentro actuaciones para ${aiEsc(scope)}.`;
+ }
+ else if(/primera|primer/.test(q)){
+   const e=aiFirstLast(rows,'first');
+   box.innerHTML=e?`<strong>Primera actuación · ${aiEsc(scope)}</strong><span class="big">${aiEsc(e.fecha_es)}</span>${aiEsc(e.lugar)} · ${aiEsc(e.tipo)}`:`No encuentro actuaciones para ${aiEsc(scope)}.`;
+ }
+ else if(/cuantas?.*(tardes|festejos|corridas)|numero.*(tardes|festejos|corridas)/.test(q)){
+   box.innerHTML=`<strong>${aiEsc(scope)}</strong><span class="big">${rows.length.toLocaleString('es-ES')}</span>festejos encontrados.`;
+ }
+ else if(q.includes('oreja')){
+   box.innerHTML=`<strong>${aiEsc(scope)}</strong><span class="big">${aiEars(rows).toLocaleString('es-ES')}</span>orejas registradas.<div class="small">${rows.length.toLocaleString('es-ES')} festejos en este ámbito.</div>`;
+ }
+ else if(q.includes('ganaderia')){
+   const top=aiTopGan(rows);
+   box.innerHTML=top?`<strong>${aiEsc(scope)}</strong><span class="big">${aiEsc(top[0])}</span>${top[1]} actuaciones registradas con esta ganadería.`:`No encuentro ganaderías para ${aiEsc(scope)}.`;
+ }
+ else if(/cuantos?.*(toros|reses|actuaciones)/.test(q)){
+   const n=rows.reduce((s,e)=>s+e.actuaciones.length,0);
+   box.innerHTML=`<strong>${aiEsc(scope)}</strong><span class="big">${n.toLocaleString('es-ES')}</span>actuaciones/reses registradas.`;
+ }
+ else if(place||year||range){
+   const top=aiTopGan(rows);
+   box.innerHTML=`<strong>${aiEsc(scope)}</strong><span class="big">${rows.length.toLocaleString('es-ES')} festejos</span>${aiEars(rows).toLocaleString('es-ES')} orejas${top?` · Ganadería más registrada: ${aiEsc(top[0])} (${top[1]})`:''}.`;
+ }
+ else{
+   box.innerHTML='Puedo responder sobre festejos, orejas, ciudades, temporadas, ganaderías, primera/última actuación y comparaciones entre dos plazas.';
+ }
+ box.classList.add('show');
+}
 function countOrejas(text){
  const t=norm(text);
  let total=0;
@@ -404,14 +516,79 @@ function renderFavs(){
  const f=favorites(); const items=DATA.filter(e=>f.has(e.id));
  $('favCards').innerHTML=items.length?items.map(cardHTML).join(''):'<div class="empty">Todavía no has guardado ningún festejo.</div>';
 }
-function renderRank(id,data){
- $(id).innerHTML=data.map(([name,count],i)=>`<div class="rank-row"><b>${i+1}. ${esc(name)}</b><span>${count.toLocaleString('es-ES')}</span></div>`).join('');
+
+function placeStats(){
+ const m=new Map();
+ DATA.forEach(e=>{
+   const key=e.lugar||'Sin localidad';
+   if(!m.has(key))m.set(key,{name:key,festejos:0,orejas:0});
+   const x=m.get(key);x.festejos++;x.orejas+=e.actuaciones.reduce((s,a)=>s+countOrejas(a.resultado||''),0);
+ });
+ return [...m.values()].map(x=>({...x,eficiencia:x.festejos?x.orejas/x.festejos:0}));
+}
+function ganStats(){
+ const m=new Map();
+ DATA.forEach(e=>e.actuaciones.forEach(a=>{
+   const key=normalizeGanaderiaName(a.ganaderia);
+   if(!key)return;
+   if(!m.has(key))m.set(key,{name:key,actuaciones:0,orejas:0});
+   const x=m.get(key);x.actuaciones++;x.orejas+=countOrejas(a.resultado||'');
+ }));
+ return [...m.values()];
+}
+function seasonStats(){
+ const m=new Map();
+ DATA.forEach(e=>{
+   const y=Number(e.anio);
+   if(!m.has(y))m.set(y,{name:String(y),festejos:0,orejas:0});
+   const x=m.get(y);x.festejos++;x.orejas+=e.actuaciones.reduce((s,a)=>s+countOrejas(a.resultado||''),0);
+ });
+ return [...m.values()].sort((a,b)=>b.festejos-a.festejos||b.name-a.name);
+}
+function renderPlaceRank(mode='festejos'){
+ let rows=placeStats();
+ if(mode==='eficiencia') rows=rows.filter(x=>x.festejos>=3).sort((a,b)=>b.eficiencia-a.eficiencia||b.festejos-a.festejos);
+ else rows.sort((a,b)=>b[mode]-a[mode]||b.festejos-a.festejos);
+ $('placesRank').innerHTML=rows.slice(0,20).map((x,i)=>`<div class="rank-row" data-place="${esc(x.name)}"><b>${i+1}. ${esc(x.name)}<small>${x.festejos} festejos · ${x.orejas} orejas</small></b><div class="rank-value"><b>${mode==='eficiencia'?x.eficiencia.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2}):x[mode].toLocaleString('es-ES')}</b><span>${mode==='festejos'?'festejos':mode==='orejas'?'orejas':'orejas/festejo'}</span></div></div>`).join('');
+ document.querySelectorAll('#placesRank .rank-row').forEach(r=>r.onclick=()=>{switchToArchiveWithSearch(r.dataset.place)});
+}
+function renderGanRank(mode='actuaciones'){
+ let rows=ganStats().sort((a,b)=>b[mode]-a[mode]||b.actuaciones-a.actuaciones);
+ $('ganRank').innerHTML=rows.slice(0,20).map((x,i)=>`<div class="rank-row"><b>${i+1}. ${esc(x.name)}<small>${x.actuaciones} actuaciones · ${x.orejas} orejas</small></b><div class="rank-value"><b>${x[mode].toLocaleString('es-ES')}</b><span>${mode==='actuaciones'?'actuaciones':'orejas'}</span></div></div>`).join('');
+}
+function renderSeasonRank(){
+ $('seasonRank').innerHTML=seasonStats().slice(0,15).map((x,i)=>`<div class="rank-row" data-year="${x.name}"><b>${i+1}. Temporada ${x.name}<small>${x.orejas} orejas detectadas</small></b><div class="rank-value"><b>${x.festejos}</b><span>festejos</span></div></div>`).join('');
+ document.querySelectorAll('#seasonRank .rank-row').forEach(r=>r.onclick=()=>{switchToArchiveWithYear(r.dataset.year)});
+}
+function switchPanel(id){
+ document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.panel===id));
+ document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===id));
+}
+function switchToArchiveWithSearch(place){
+ switchPanel('archivePanel');$('q').value=place;$('year').value='';apply();scrollTo(0,0);
+}
+function switchToArchiveWithYear(year){
+ switchPanel('archivePanel');$('q').value='';$('year').value=year;apply();scrollTo(0,0);
+}
+function initAdvancedStats(){
+ $('stFestejos').textContent=DATA.length.toLocaleString('es-ES');
+ $('stOrejas').textContent=aiEars(DATA).toLocaleString('es-ES');
+ $('stPlazas').textContent=new Set(DATA.map(e=>e.lugar)).size.toLocaleString('es-ES');
+ $('stGanaderias').textContent=ganStats().length.toLocaleString('es-ES');
+ renderPlaceRank('festejos');renderGanRank('actuaciones');renderSeasonRank();
+
+ document.querySelectorAll('#placeRankControls .rank-tab').forEach(b=>b.onclick=()=>{
+   document.querySelectorAll('#placeRankControls .rank-tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');renderPlaceRank(b.dataset.rank);
+ });
+ document.querySelectorAll('#ganRankControls .rank-tab').forEach(b=>b.onclick=()=>{
+   document.querySelectorAll('#ganRankControls .rank-tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');renderGanRank(b.dataset.rank);
+ });
 }
 function init(){
  [...new Set(DATA.map(x=>x.anio))].sort((a,b)=>b-a).forEach(y=>$('year').insertAdjacentHTML('beforeend',`<option>${y}</option>`));
  [...new Set(DATA.map(x=>x.tipo))].sort().forEach(t=>$('type').insertAdjacentHTML('beforeend',`<option>${esc(t)}</option>`));
  const storedTheme=localStorage.getItem('morante-theme');if(storedTheme)document.documentElement.dataset.theme=storedTheme;
- renderRank('placesRank',PLACE_RANK);renderRank('ganRank',GAN_RANK);apply();renderFavs();
+ initAdvancedStats();apply();renderFavs();
  if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('./sw.js');
 }
 let timer;$('q').oninput=()=>{clearTimeout(timer);timer=setTimeout(()=>apply(),120)};$('year').onchange=()=>apply();$('type').onchange=()=>apply();
@@ -441,8 +618,7 @@ Array.prototype.forEach.call(document.querySelectorAll('.ai-chip'),function(b){
 apply();
 $('prev').onclick=()=>{page--;render();scrollTo(0,0)};$('next').onclick=()=>{page++;render();scrollTo(0,0)};
 $('theme').onclick=()=>{const t=document.documentElement.dataset.theme==='dark'?'':'dark';document.documentElement.dataset.theme=t;localStorage.setItem('morante-theme',t);};
-document.querySelectorAll('.nav-btn').forEach(btn=>btn.onclick=()=>{document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
- document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));$(btn.dataset.panel).classList.add('active');if(btn.dataset.panel==='favPanel')renderFavs();scrollTo(0,0);});
+document.querySelectorAll('.nav-btn').forEach(btn=>btn.onclick=()=>{switchPanel(btn.dataset.panel);if(btn.dataset.panel==='favPanel')renderFavs();if(btn.dataset.panel==='statsPanel')initAdvancedStats();scrollTo(0,0);});
 init();
 </script>
 
