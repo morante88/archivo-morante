@@ -410,7 +410,7 @@ function cardHTML(e){
  <div class="card-actions"><button class="small-btn" onclick="toggleFav('${esc(e.id)}')">${isFav(e.id)?'★':'☆'}</button>
  <button class="small-btn" onclick="shareEvent('${esc(e.id)}')">↗</button></div></div>
  ${e.actuaciones.map((a,i)=>`<div class="act"><span class="badge">Actuación ${i+1} de ${e.actuaciones.length}</span><br>
- ${a.ganaderia?`<b>${esc(cleanGanaderia2026(a.ganaderia,e.anio))}</b><br>`:''}${esc(a.resultado)}
+ ${a.ganaderia?`<b>${esc(a.ganaderia)}</b><br>`:''}${esc(a.resultado)}
  <div class="raw">${esc(a.texto)} · Ref. ${esc(a.referencia)}</div></div>`).join('')}</article>`;
 }
 
@@ -761,7 +761,7 @@ function renderExplorer(){
      <div class="stat"><b>${esc(range)}</b><span>periodo</span></div>
    </div>
    ${top?`<p class="note">Ganadería más frecuente en esta selección: <b>${esc(top[0])}</b> (${top[1]} actuaciones).</p>`:''}
-   <div class="explorer-events">${rows.slice(0,30).map(e=>`<div class="explorer-event"><b>${esc(e.fecha_es)} · ${esc(e.lugar)}</b><span>${esc(e.tipo)} · ${e.actuaciones.map(a=>`${esc(cleanGanaderia2026(normalizeGanaderiaName(a.ganaderia), e.anio))}: ${esc(a.resultado)}`).join(' · ')}</span></div>`).join('')}</div>
+   <div class="explorer-events">${rows.slice(0,30).map(e=>`<div class="explorer-event"><b>${esc(e.fecha_es)} · ${esc(e.lugar)}</b><span>${esc(e.tipo)} · ${e.actuaciones.map(a=>`${esc(normalizeGanaderiaName(a.ganaderia))}: ${esc(a.resultado)}`).join(' · ')}</span></div>`).join('')}</div>
    ${rows.length>30?`<p class="note">Mostrando los primeros 30 de ${rows.length} festejos.</p>`:''}`;
 }
 function placeCompareStats(place){
@@ -894,7 +894,7 @@ function renderTodayHistory(){
  box.innerHTML=rows.slice(0,10).map(e=>{
    const acts=(e.actuaciones||[]).map(a=>{
      const g=typeof normalizeGanaderiaName==='function' ? normalizeGanaderiaName(a.ganaderia) : a.ganaderia;
-     return `${safe(cleanGanaderia2026(g,e.anio))}: ${safe(a.resultado)}`;
+     return `${safe(g)}: ${safe(a.resultado)}`;
    }).join(' · ');
    return `<div class="efem-item"><span class="efem-year">${safe(e.anio)}</span> · <b>${safe(e.lugar)}</b> — ${safe(e.tipo)}<br><span class="note">${acts}</span></div>`;
  }).join('');
@@ -902,10 +902,16 @@ function renderTodayHistory(){
 window.addEventListener('load',renderTodayHistory);
 
 
-function cleanGanaderia2026(name, year){
-  const s=String(name||'').trim();
-  return String(year)==='2026' ? s.replace(/^\s*(?:1|4)\s*[-–—.:)]?\s*/,'') : s;
-}
+(function(){
+  if (typeof DATA === 'undefined') return;
+  DATA.forEach(e=>{
+    if(String(e.anio)==='2026' && Array.isArray(e.actuaciones)){
+      e.actuaciones.forEach(a=>{
+        if(a && a.ganaderia) a.ganaderia=String(a.ganaderia).trim().replace(/^(?:1|4)\s+/,'');
+      });
+    }
+  });
+})();
 </script>
 
 </body></html>
