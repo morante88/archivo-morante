@@ -177,6 +177,35 @@ select,.icon-btn{min-height:44px;border:1px solid var(--line);border-radius:13px
 }
 
 </style>
+
+<style id="morante-photo-background">
+html, body { min-height: 100%; }
+body {
+  background:
+    linear-gradient(rgba(18,12,7,.46), rgba(18,12,7,.58)),
+    url("fondo-morante.jpg") center 18% / cover fixed no-repeat !important;
+}
+body::before {
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:-1;
+  background:rgba(30,18,8,.08);
+}
+main, .app, .page, .content, .shell {
+  background: transparent !important;
+}
+@media (max-width: 760px) {
+  body {
+    background:
+      linear-gradient(rgba(18,12,7,.48), rgba(18,12,7,.62)),
+      url("fondo-morante.jpg") 42% top / auto 100vh fixed no-repeat !important;
+    background-color:#21150d !important;
+  }
+}
+</style>
+
 </head>
 <body>
 <header class="hero">
@@ -426,7 +455,7 @@ select,.icon-btn{min-height:44px;border:1px solid var(--line);border-radius:13px
 <button class="nav-btn" data-panel="rendimientoPanel"><strong>📊</strong>Histórico</button>
 </nav>
 
-<script src="morante-data.js?v=20260928-7"></script>
+<script src="morante-data.js?v=20260928-8"></script>
 <script>
 const DATA=window.MORANTE_DATA||[];
 let filtered=[],page=1; const PAGE_SIZE=24; const $=id=>document.getElementById(id);
