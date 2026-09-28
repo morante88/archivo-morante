@@ -379,15 +379,54 @@ select,.icon-btn{min-height:44px;border:1px solid var(--line);border-radius:13px
 </section>
 </main>
 
+
+<section id="rendimientoPanel" class="panel">
+  <h2>Panel histórico</h2>
+  <p class="note">Una lectura rápida del archivo completo: triunfos, temporadas, plazas y ganaderías.</p>
+  <div id="histSummary" class="stats-summary"></div>
+
+  <div class="explorer-card" style="margin-bottom:14px">
+    <h2 style="margin-top:0">🏆 Grandes triunfos</h2>
+    <div class="rank-controls">
+      <button class="rank-tab active" data-triumph="all">Todos</button>
+      <button class="rank-tab" data-triumph="rabo">Rabos</button>
+      <button class="rank-tab" data-triumph="dos">Dos orejas</button>
+      <button class="rank-tab" data-triumph="doble">Oreja y oreja</button>
+    </div>
+    <div id="triumphList" class="explorer-events"></div>
+  </div>
+
+  <div class="explorer-card" style="margin-bottom:14px">
+    <h2 style="margin-top:0">📈 Temporadas</h2>
+    <div class="explorer-grid">
+      <div><label>Temporada</label><select id="seasonSelect"></select></div>
+      <div><label>Ordenar</label><select id="seasonSort"><option value="year">Año</option><option value="festejos">Más festejos</option><option value="orejas">Más orejas</option></select></div>
+    </div>
+    <div id="seasonSummary" class="explorer-result"></div>
+    <div id="seasonRanking" class="rank" style="margin-top:12px"></div>
+  </div>
+
+  <div class="explorer-card">
+    <h2 style="margin-top:0">🔎 Accesos rápidos</h2>
+    <div class="explorer-actions">
+      <button class="secondary" onclick="quickHistorical('Sevilla')">Sevilla</button>
+      <button class="secondary" onclick="quickHistorical('Madrid')">Madrid</button>
+      <button class="secondary" onclick="quickHistorical('Ronda')">Ronda</button>
+      <button class="secondary" onclick="quickHistorical('Campo Pequeno (Lisboa)')">Campo Pequeno</button>
+    </div>
+  </div>
+</section>
+
 <nav class="bottom-nav">
   <button class="nav-btn active" data-panel="archivePanel"><strong>⌕</strong>Archivo</button>
   <button class="nav-btn" data-panel="statsPanel"><strong>▥</strong>Estadísticas</button>
   <button class="nav-btn" data-panel="explorePanel"><strong>⌘</strong>Explorador</button>
   <button class="nav-btn" data-panel="favPanel"><strong>★</strong>Favoritos</button>
   <button class="nav-btn" data-panel="aboutPanel"><strong>ⓘ</strong>Información</button>
+<button class="nav-btn" data-panel="rendimientoPanel"><strong>📊</strong>Histórico</button>
 </nav>
 
-<script src="morante-data.js?v=20260928-6"></script>
+<script src="morante-data.js?v=20260928-7"></script>
 <script>
 const DATA=window.MORANTE_DATA||[];
 let filtered=[],page=1; const PAGE_SIZE=24; const $=id=>document.getElementById(id);
@@ -912,6 +951,99 @@ window.addEventListener('load',renderTodayHistory);
     }
   });
 })();
+
+/* ===== PANEL HISTÓRICO ===== */
+(function(){
+  function earCount(r){
+    r=String(r||'').toLowerCase();
+    if(r.includes('dos orejas')||r.includes('2 orejas')) return 2;
+    if(r.includes('oreja')) return 1;
+    return 0;
+  }
+  function escH(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+  function allData(){return (window.MORANTE_DATA||[]);}
+  function acts(f){return Array.isArray(f.actuaciones)?f.actuaciones:[];}
+  function totals(){
+    const d=allData(), aa=d.flatMap(acts);
+    return {
+      festejos:d.length,
+      plazas:new Set(d.map(x=>x.lugar).filter(Boolean)).size,
+      temporadas:new Set(d.map(x=>x.anio).filter(Boolean)).size,
+      orejas:aa.reduce((n,a)=>n+earCount(a.resultado),0),
+      rabos:aa.filter(a=>String(a.resultado||'').toLowerCase().includes('rabo')).length,
+      ganaderias:new Set(aa.map(a=>String(a.ganaderia||'').replace(/^\s*\d+\s*[ºª]?\s*/,'').trim()).filter(Boolean)).size
+    };
+  }
+  function renderHistSummary(){
+    const el=document.getElementById('histSummary'); if(!el)return;
+    const t=totals();
+    el.innerHTML=[
+      ['Festejos',t.festejos],['Plazas',t.plazas],['Orejas',t.orejas],
+      ['Rabos',t.rabos],['Ganaderías',t.ganaderias],['Temporadas',t.temporadas]
+    ].map(x=>`<div class="stat"><b>${x[1]}</b><span>${x[0]}</span></div>`).join('');
+  }
+  function triumphs(kind='all'){
+    const d=allData(), out=[];
+    d.forEach(f=>{
+      const aa=acts(f), one=aa.filter(a=>earCount(a.resultado)===1);
+      aa.forEach(a=>{
+        const r=String(a.resultado||'').toLowerCase();
+        if(r.includes('rabo')) out.push({f,a,t:'Dos orejas y rabo',k:'rabo'});
+        else if(r.includes('dos orejas')||r.includes('2 orejas')) out.push({f,a,t:'Dos orejas',k:'dos'});
+      });
+      if(one.length>=2) out.push({f,a:{ganaderia:one.map(x=>x.ganaderia).join(' / ')},t:'Oreja y oreja',k:'doble'});
+    });
+    const filtered=kind==='all'?out:out.filter(x=>x.k===kind);
+    filtered.sort((a,b)=>String(b.f.fecha).localeCompare(String(a.f.fecha)));
+    const el=document.getElementById('triumphList'); if(!el)return;
+    el.innerHTML=filtered.length?filtered.map(x=>`<div class="explorer-event"><b>${escH(x.f.fecha_es)} · ${escH(x.f.lugar)}</b><span class="badge">${escH(x.t)}</span><div class="meta">${escH(String(x.a.ganaderia||'').replace(/^\s*\d+\s*[ºª]?\s*/,''))}</div></div>`).join(''):'<div class="empty">No hay resultados.</div>';
+  }
+  function seasonRows(){
+    const m=new Map();
+    allData().forEach(f=>{
+      const y=f.anio||String(f.fecha||'').slice(0,4);
+      if(!m.has(y))m.set(y,{year:y,festejos:0,orejas:0,plazas:new Set()});
+      const r=m.get(y); r.festejos++; r.plazas.add(f.lugar);
+      r.orejas+=acts(f).reduce((n,a)=>n+earCount(a.resultado),0);
+    });
+    return [...m.values()].map(x=>({...x,plazas:x.plazas.size}));
+  }
+  function renderSeasons(){
+    const rows=seasonRows(), sel=document.getElementById('seasonSelect');
+    if(sel && !sel.options.length){
+      sel.innerHTML='<option value="">Todas</option>'+rows.slice().sort((a,b)=>b.year-a.year).map(x=>`<option>${x.year}</option>`).join('');
+      sel.addEventListener('change',renderSeasons);
+    }
+    const chosen=sel?sel.value:'';
+    const sum=document.getElementById('seasonSummary');
+    if(sum){
+      const x=rows.find(r=>String(r.year)===chosen);
+      sum.innerHTML=x?`<div class="stats-summary"><div class="stat"><b>${x.festejos}</b><span>Festejos</span></div><div class="stat"><b>${x.orejas}</b><span>Orejas</span></div><div class="stat"><b>${x.plazas}</b><span>Plazas</span></div></div>`:'';
+    }
+    const sort=document.getElementById('seasonSort')?.value||'year';
+    const sorted=rows.slice().sort((a,b)=>sort==='year'?b.year-a.year:b[sort]-a[sort]);
+    const rank=document.getElementById('seasonRanking'); if(rank)
+      rank.innerHTML=sorted.map(x=>`<div class="rank-row"><b>${x.year}<small>${x.plazas} plazas</small></b><div class="rank-value"><b>${x.festejos}</b><span>festejos · ${x.orejas} orejas</span></div></div>`).join('');
+  }
+  window.quickHistorical=function(place){
+    const input=document.querySelector('.search');
+    const archiveBtn=document.querySelector('[data-panel="archivoPanel"],[data-panel="archivePanel"]');
+    if(archiveBtn) archiveBtn.click();
+    if(input){input.value=place; input.dispatchEvent(new Event('input',{bubbles:true}));}
+    window.scrollTo({top:0,behavior:'smooth'});
+  };
+  function initHistorical(){
+    renderHistSummary(); triumphs(); renderSeasons();
+    document.querySelectorAll('[data-triumph]').forEach(b=>b.addEventListener('click',()=>{
+      document.querySelectorAll('[data-triumph]').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active'); triumphs(b.dataset.triumph);
+    }));
+    document.getElementById('seasonSort')?.addEventListener('change',renderSeasons);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initHistorical);
+  else initHistorical();
+})();
+
 </script>
 
 </body></html>
