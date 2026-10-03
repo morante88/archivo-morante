@@ -206,6 +206,38 @@ main, .app, .page, .content, .shell {
 }
 </style>
 
+
+<style id="menu-inferior-compacto">
+.bottom-nav{
+ position:fixed!important; left:50%!important; bottom:8px!important;
+ transform:translateX(-50%)!important; width:auto!important;
+ max-width:calc(100vw - 20px)!important; height:auto!important;
+ min-height:0!important; padding:4px 6px!important; gap:2px!important;
+ display:flex!important; flex-wrap:nowrap!important; overflow-x:auto!important;
+ border-radius:15px!important; background:rgba(18,13,10,.90)!important;
+ backdrop-filter:blur(14px)!important; -webkit-backdrop-filter:blur(14px)!important;
+ scrollbar-width:none!important;
+}
+.bottom-nav::-webkit-scrollbar{display:none!important}
+.bottom-nav .nav-btn{
+ flex:0 0 auto!important; width:auto!important; min-width:auto!important;
+ height:38px!important; padding:4px 9px!important; margin:0!important;
+ display:flex!important; align-items:center!important; justify-content:center!important;
+ gap:4px!important; font-size:10px!important; line-height:1!important;
+ white-space:nowrap!important; border-radius:10px!important;
+}
+.bottom-nav .nav-btn strong{font-size:14px!important;line-height:1!important;margin:0!important}
+body{padding-bottom:58px!important}
+@media(max-width:760px){
+ .bottom-nav{left:6px!important;right:6px!important;bottom:6px!important;
+ transform:none!important;width:auto!important;max-width:none!important;
+ justify-content:flex-start!important;padding:4px!important}
+ .bottom-nav .nav-btn{height:34px!important;padding:3px 7px!important;font-size:9px!important}
+ .bottom-nav .nav-btn strong{font-size:13px!important}
+ body{padding-bottom:50px!important}
+}
+</style>
+
 </head>
 <body>
 <header class="hero">
@@ -455,7 +487,7 @@ main, .app, .page, .content, .shell {
 <button class="nav-btn" data-panel="rendimientoPanel"><strong>📊</strong>Histórico</button>
 </nav>
 
-<script src="morante-data.js?v=20260928-8"></script>
+<script src="morante-data.js?v=20261003-menucompacto"></script>
 <script>
 const DATA=window.MORANTE_DATA||[];
 let filtered=[],page=1; const PAGE_SIZE=24; const $=id=>document.getElementById(id);
