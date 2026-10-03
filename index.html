@@ -238,6 +238,18 @@ body{padding-bottom:58px!important}
 }
 </style>
 
+
+<style id="ocultar-resumen-superior">
+/* Resumen de cuatro contadores situado encima del buscador */
+#archivoPanel > .stats-summary:first-of-type,
+#archivePanel > .stats-summary:first-of-type,
+main > .stats-summary:first-of-type,
+.stats-summary.top-summary,
+.summary-cards:first-of-type {
+  display:none !important;
+}
+</style>
+
 </head>
 <body>
 <header class="hero">
@@ -487,7 +499,7 @@ body{padding-bottom:58px!important}
 <button class="nav-btn" data-panel="rendimientoPanel"><strong>📊</strong>Histórico</button>
 </nav>
 
-<script src="morante-data.js?v=20261003-menucompacto"></script>
+<script src="morante-data.js?v=20261003-limpio2"></script>
 <script>
 const DATA=window.MORANTE_DATA||[];
 let filtered=[],page=1; const PAGE_SIZE=24; const $=id=>document.getElementById(id);
