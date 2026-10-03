@@ -250,58 +250,6 @@ main > .stats-summary:first-of-type,
 }
 </style>
 
-
-<style id="texto-claro-sobre-foto">
-body, main, .app, .page, .content, .shell { color:#fff7e8 !important; }
-
-h1,h2,h3,h4,h5,h6,
-.title,.section-title,.card-title,
-label,.note,.meta,p,small,
-.archive-count,.result-count {
-  color:#fff7e8 !important;
-  text-shadow:0 1px 3px rgba(0,0,0,.75);
-}
-
-a { color:#f4d28d !important; }
-strong,b { color:#fffaf0 !important; }
-
-input,select,textarea {
-  color:#fff !important;
-  background:rgba(20,14,10,.82) !important;
-  border-color:rgba(224,183,105,.55) !important;
-}
-input::placeholder,textarea::placeholder {
-  color:rgba(255,247,232,.72) !important;
-}
-
-button,.secondary,.rank-tab {
-  color:#fff4dc !important;
-}
-.rank-tab.active,.nav-btn.active {
-  color:#ffe2a5 !important;
-}
-
-.card,.panel,.explorer-card,.explorer-event,.rank-row,
-.event-card,.festejo-card,.archive-card,
-.stats-summary .stat,.explorer-result {
-  color:#fff7e8 !important;
-}
-
-.badge {
-  color:#ffe0a0 !important;
-}
-
-.bottom-nav,.bottom-nav .nav-btn {
-  color:#fff4dc !important;
-  text-shadow:none !important;
-}
-
-/* Evita textos negros heredados dentro de los bloques principales */
-#archivoPanel *, #archivePanel *, #rendimientoPanel * {
-  --text:#fff7e8;
-}
-</style>
-
 </head>
 <body>
 <header class="hero">
@@ -551,7 +499,7 @@ button,.secondary,.rank-tab {
 <button class="nav-btn" data-panel="rendimientoPanel"><strong>📊</strong>Histórico</button>
 </nav>
 
-<script src="morante-data.js?v=20261003-textoclaro"></script>
+<script src="morante-data.js?v=20261003-limpio2"></script>
 <script>
 const DATA=window.MORANTE_DATA||[];
 let filtered=[],page=1; const PAGE_SIZE=24; const $=id=>document.getElementById(id);
